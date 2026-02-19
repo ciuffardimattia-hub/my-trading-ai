@@ -9,10 +9,9 @@ import google.generativeai as genai
 import requests
 import xml.etree.ElementTree as ET
 import hashlib
-import re
 
-# --- 1. CONFIGURAZIONE & STYLE CYBERPUNK ---
-st.set_page_config(page_title="CyberTrading AI v8.7", layout="wide", page_icon="⚡")
+# --- 1. CONFIGURAZIONE & STYLE ---
+st.set_page_config(page_title="CyberTrading AI v8.8", layout="wide", page_icon="⚡")
 
 st.markdown("""
     <style>
@@ -30,86 +29,45 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. FUNZIONI DI SICUREZZA ---
-def make_hashes(password):
-    return hashlib.sha256(str.encode(password)).hexdigest()
+# --- 2. FUNZIONI CORE ---
+def make_hashes(password): return hashlib.sha256(str.encode(password)).hexdigest()
+def check_hashes(password, hashed_text): return make_hashes(password) == hashed_text
 
-def check_hashes(password, hashed_text):
-    return make_hashes(password) == hashed_text
-
-# --- 3. MOTORE NOTIZIE ---
 def get_advanced_news(symbol):
     news_items = []
-    seen = set()
     q = symbol.replace("-USD", "")
-    for timeframe in ["1d", "7d"]:
-        url = f"https://news.google.com/rss/search?q={q}+stock+news+when:{timeframe}&hl=it&gl=IT&ceid=IT:it"
-        try:
-            resp = requests.get(url, timeout=5)
-            root = ET.fromstring(resp.content)
-            for item in root.findall('.//item')[:5]:
-                title = item.find('title').text
-                if title and title not in seen and len(title) > 20:
-                    news_items.append({
-                        't': title, 's': item.find('source').text,
-                        'l': item.find('link').text, 'd': item.find('pubDate').text[:16],
-                        'p': "RECENTE" if timeframe == "1d" else "SETTIMANALE"
-                    })
-                    seen.add(title)
-            if news_items and timeframe == "1d": break
-        except: continue
+    url = f"https://news.google.com/rss/search?q={q}+stock+news+when:7d&hl=it&gl=IT&ceid=IT:it"
+    try:
+        resp = requests.get(url, timeout=5)
+        root = ET.fromstring(resp.content)
+        for item in root.findall('.//item')[:5]:
+            news_items.append({'t': item.find('title').text, 'l': item.find('link').text, 'p': "MARKET DATA"})
+    except: pass
     return news_items
 
-# --- 4. CONNESSIONE DATABASE (GOOGLE SHEETS) ---
+# --- 3. DATABASE ---
 conn = st.connection("gsheets", type=GSheetsConnection)
-
-def carica_tabella(nome_foglio):
-    try:
-        return conn.read(worksheet=nome_foglio, ttl=0)
+def carica_tabella(nome):
+    try: return conn.read(worksheet=nome, ttl=0)
     except:
-        if nome_foglio == "Utenti": return pd.DataFrame(columns=["Email", "Password"])
+        if nome == "Utenti": return pd.DataFrame(columns=["Email", "Password"])
         return pd.DataFrame(columns=["Email", "Ticker", "Prezzo", "Quantità", "Totale", "Data"])
 
-# --- 5. CHAT IA (BRAIN UPGRADE v8.7) ---
+# --- 4. CHAT IA ANALYST ---
 def get_ai_chat_response(prompt, context):
     try:
         api_key = st.secrets.get("GEMINI_API_KEY")
-        if not api_key: return "⚠️ Chiave GEMINI_API_KEY non trovata nei Secrets."
-        
+        if not api_key: return "⚠️ Chiave mancante."
         genai.configure(api_key=api_key)
-        
-        # Scanner automatico modelli
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        selected_model = next((m for m in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-pro'] if m in available_models), available_models[0] if available_models else "")
-
-        if not selected_model: return "❌ Nessun modello IA disponibile."
-
+        selected_model = next((m for m in ['models/gemini-1.5-flash', 'models/gemini-pro'] if m in available_models), available_models[0])
         model = genai.GenerativeModel(selected_model)
-
-        # ISTRUZIONI DI SISTEMA PER L'IA
-        system_instruction = f"""
-        Sei 'CYBER-ANALYST v8.7', un esperto Senior in mercati finanziari.
-        Il tuo tono è analitico, freddo e professionale (stile Cyberpunk).
-        
-        REGOLE TECNICHE:
-        1. Se RSI > 70: è Ipercomprato. Se RSI < 30: è Ipervenduto.
-        2. Se Prezzo > SMA20: Trend Rialzista. Se Prezzo < SMA20: Trend Ribassista.
-        3. Analizza sempre il Portafoglio dell'utente se i dati sono presenti.
-        
-        DATI CONTESTUALI ATTUALI:
-        {context}
-
-        Rispondi in ITALIANO. Usa grassetti per i dati importanti. 
-        Non dare consigli finanziari diretti, usa termini come 'Tecnicamente si osserva'.
-        """
-
+        system_instruction = f"Sei 'CYBER-ANALYST v8.8'. Analista mercati senior. Dati: {context}. Rispondi in italiano con tono cyberpunk."
         response = model.generate_content([system_instruction, prompt])
         return f"**[AI Node: {selected_model}]**\n\n{response.text}"
+    except Exception as e: return f"❌ Errore IA: {e}"
 
-    except Exception as e:
-        return f"❌ Errore IA: {str(e)}"
-
-# --- 6. ACCESSO ---
+# --- 5. ACCESSO ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user_email = ""
@@ -118,31 +76,31 @@ if not st.session_state.logged_in:
     st.title("📟 CyberLink Access")
     t1, t2 = st.tabs(["🔐 LOGIN", "📝 REGISTRAZIONE"])
     with t1:
-        email = st.text_input("Email").lower()
-        pwd = st.text_input("Password", type="password")
+        e = st.text_input("Email").lower()
+        p = st.text_input("Password", type="password")
         if st.button("AUTENTICAZIONE"):
             df_u = carica_tabella("Utenti")
-            user_row = df_u[df_u["Email"] == email]
-            if not user_row.empty and check_hashes(pwd, user_row["Password"].values[0]):
+            u = df_u[df_u["Email"] == e]
+            if not u.empty and check_hashes(p, u["Password"].values[0]):
                 st.session_state.logged_in = True
-                st.session_state.user_email = email
+                st.session_state.user_email = e
                 st.rerun()
-            else: st.error("Credenziali non valide.")
+            else: st.error("Accesso negato.")
     with t2:
-        new_e = st.text_input("Nuova Email").lower()
-        new_p = st.text_input("Nuova Password", type="password")
+        ne = st.text_input("Nuova Email").lower()
+        np = st.text_input("Nuova Password", type="password")
         if st.button("CREA NODO"):
             df_u = carica_tabella("Utenti")
-            if new_e in df_u["Email"].values: st.warning("Esistente.")
-            elif "@" in new_e:
-                nuovo_u = pd.DataFrame([{"Email": new_e, "Password": make_hashes(new_p)}])
-                conn.update(worksheet="Utenti", data=pd.concat([df_u, nuovo_u], ignore_index=True))
+            if ne in df_u["Email"].values: st.warning("Esistente.")
+            elif "@" in ne:
+                nu = pd.DataFrame([{"Email": ne, "Password": make_hashes(np)}])
+                conn.update(worksheet="Utenti", data=pd.concat([df_u, nu], ignore_index=True))
                 st.success("Account creato!")
     st.stop()
 
-# --- 7. DASHBOARD OPERATIVA ---
+# --- 6. DASHBOARD PRINCIPALE ---
 st.markdown("### 🌍 Panorama Mercati")
-indices = {"^GSPC": "S&P 500", "BTC-USD": "Bitcoin", "GC=F": "Oro", "NVDA": "Nvidia", "TSLA": "Tesla"}
+indices = {"^GSPC": "S&P 500", "BTC-USD": "Bitcoin", "GC=F": "Oro", "NVDA": "Nvidia"}
 cols = st.columns(len(indices))
 for i, (sym, name) in enumerate(indices.items()):
     try:
@@ -153,89 +111,99 @@ for i, (sym, name) in enumerate(indices.items()):
 
 st.divider()
 
+# --- 🚀 NUOVA DASHBOARD DI RIEPILOGO GLOBALE ---
+st.subheader("📊 Il Tuo Patrimonio Cyber (Totale)")
+db_full = carica_tabella("Portafoglio")
+miei_titoli = db_full[db_full["Email"] == st.session_state.user_email]
+
+if not miei_titoli.empty:
+    # Calcolo Live
+    tot_investito = miei_titoli["Totale"].sum()
+    valore_attuale_tot = 0
+    
+    unique_tickers = miei_titoli["Ticker"].unique()
+    # Recupero prezzi in blocco per velocità
+    prezzi_live = {}
+    for t in unique_tickers:
+        try:
+            tsym = f"{t}-USD" if t in ["BTC", "ETH", "SOL"] else t
+            prezzi_live[t] = yf.Ticker(tsym).history(period="1d")['Close'].iloc[-1]
+        except: prezzi_live[t] = 0
+        
+    for index, row in miei_titoli.iterrows():
+        valore_attuale_tot += prezzi_live.get(row["Ticker"], 0) * row["Quantità"]
+    
+    profitto_tot = valore_attuale_tot - tot_investito
+    perc_tot = (profitto_tot / tot_investito * 100) if tot_investito > 0 else 0
+    
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Capitale Investito", f"{tot_investito:.2f} $")
+    c2.metric("Valore di Mercato", f"{valore_attuale_tot:.2f} $", delta=f"{profitto_tot:.2f} $")
+    c3.metric("Performance Globale", f"{perc_tot:.2f}%", delta=f"{perc_tot:.2f}%")
+else:
+    st.info("Aggiungi titoli nel portafoglio per vedere il riepilogo globale.")
+
+st.divider()
+
 # Sidebar
-st.sidebar.title(f"👾 User: {st.session_state.user_email}")
-ticker_search = st.sidebar.text_input("🔍 Cerca Titolo", "NVDA").upper()
-ticker_sym = f"{ticker_search}-USD" if ticker_search in ["BTC", "ETH", "SOL"] else ticker_search
+st.sidebar.title(f"👾 {st.session_state.user_email}")
+t_search = st.sidebar.text_input("🔍 Cerca Titolo", "BTC").upper()
+t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
 
 with st.sidebar.container(border=True):
-    st.subheader("💾 Portafoglio")
-    pr_acq = st.sidebar.number_input("Prezzo Carico ($)", min_value=0.0)
-    qt_acq = st.sidebar.number_input("Quantità", min_value=0.0)
+    st.subheader("💾 Operazione")
+    p_acq = st.sidebar.number_input("Prezzo ($)", min_value=0.0)
+    q_acq = st.sidebar.number_input("Quantità", min_value=0.0)
     if st.sidebar.button("INVIA AL CLOUD"):
-        db_p = carica_tabella("Portafoglio")
-        nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": ticker_search, "Prezzo": pr_acq, "Quantità": qt_acq, "Totale": pr_acq * qt_acq, "Data": str(pd.Timestamp.now().date())}])
-        conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
+        nuova = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_search, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
+        conn.update(worksheet="Portafoglio", data=pd.concat([db_full, nuova], ignore_index=True))
         st.sidebar.success("Sincronizzato!")
+        st.rerun()
 
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.logged_in = False
     st.rerun()
 
-# Analisi e Chat
+# Analisi Titolo Singolo
 try:
-    data = yf.download(ticker_sym, period="1y", interval="1d", auto_adjust=True)
+    data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True)
     if not data.empty:
         df = data.copy()
         if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
         df['SMA20'] = ta.sma(df['Close'], length=20)
         df['RSI'] = ta.rsi(df['Close'], length=14)
-        last_price = float(df['Close'].iloc[-1])
+        last_p = float(df['Close'].iloc[-1])
         
-        st.header(f"🚀 {ticker_sym} Tactical Feed")
-
-        # Metriche Portafoglio
-        db_p = carica_tabella("Portafoglio")
-        miei = db_p[(db_p["Email"] == st.session_state.user_email) & (db_p["Ticker"] == ticker_search)]
-        p_info_ai = "Nessuna posizione aperta."
-        if not miei.empty:
-            tot_q = miei["Quantità"].sum()
-            pmc = miei["Totale"].sum() / tot_q
-            pl = ((last_price - pmc) / pmc) * 100
-            m1, m2, m3 = st.columns(3)
-            m1.metric("PMC", f"{pmc:.2f} $")
-            m2.metric("Quantità", f"{tot_q:.1f}")
-            m3.metric("P&L", f"{pl:.2f}%", delta=f"{pl:.2f}%")
-            p_info_ai = f"L'utente ha {tot_q} quote a PMC {pmc:.2f} $. Attualmente in {'Guadagno' if pl>0 else 'Perdita'}."
-
-        # Grafico Professionale
+        st.header(f"📈 Analisi Tattica: {t_sym}")
+        
+        # Grafico
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
         fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Market"), row=1, col=1)
         fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange')), row=1, col=1)
         fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta')), row=2, col=1)
-        fig.update_layout(height=550, template="plotly_dark", xaxis_rangeslider_visible=False)
+        fig.update_layout(height=500, template="plotly_dark", xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
-        
-
         st.divider()
-        col_news, col_chat = st.columns([0.5, 0.5])
-        
-        with col_news:
+        cn, cc = st.columns([0.4, 0.6])
+        with cn:
             st.subheader("📰 Data Stream")
-            notizie = get_advanced_news(ticker_search)
-            news_context = ""
-            if notizie:
-                for n in notizie:
-                    news_context += f"- {n['t']}\n"
-                    with st.container(border=True):
-                        st.markdown(f"**{n['p']}** | [{n['t']}]({n['l']})")
-            else: st.warning("Nessuna notizia rilevata.")
-
-        with col_chat:
-            st.subheader("💬 Tactical AI Advisor")
-            if 'messages' not in st.session_state: st.session_state.messages = []
-            for m in st.session_state.messages:
+            notizie = get_advanced_news(t_search)
+            n_ctx = ""
+            for n in notizie:
+                n_ctx += f"- {n['t']}\n"
+                st.markdown(f"[{n['t']}]({n['l']})")
+        with cc:
+            st.subheader("💬 AI Advisor")
+            if 'msgs' not in st.session_state: st.session_state.msgs = []
+            for m in st.session_state.msgs:
                 with st.chat_message(m["role"]): st.markdown(m["content"])
-            
-            if chat_input := st.chat_input("Invia comando..."):
-                st.session_state.messages.append({"role": "user", "content": chat_input})
-                with st.chat_message("user"): st.markdown(chat_input)
-                
+            if inp := st.chat_input("Comando..."):
+                st.session_state.msgs.append({"role": "user", "content": inp})
+                with st.chat_message("user"): st.markdown(inp)
                 with st.chat_message("assistant"):
-                    ctx = f"Ticker {ticker_sym}, Prezzo {last_price}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}. News: {news_context}. {p_info_ai}"
-                    ai_response = get_ai_chat_response(chat_input, ctx)
-                    st.markdown(ai_response)
-                    st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
-except Exception as e: st.error(f"Errore: {e}")
+                    ctx = f"Titolo {t_sym}, Prezzo {last_p}, RSI {df['RSI'].iloc[-1]:.1f}, Capitale Totale {tot_investito if not miei_titoli.empty else 0}$"
+                    res = get_ai_chat_response(inp, ctx)
+                    st.markdown(res)
+                    st.session_state.msgs.append({"role": "assistant", "content": res})
+except Exception as e: st.error(f"Sistema offline: {e}")
