@@ -1,4 +1,4 @@
-        import streamlit as st
+import streamlit as st
 import yfinance as yf
 import pandas_ta as ta
 import pandas as pd
@@ -221,3 +221,4 @@ elif st.session_state.logged_in:
 
     if st.sidebar.button(L['btn_logout']):
         st.session_state.logged_in = False; st.rerun()
+
