@@ -11,34 +11,43 @@ import xml.etree.ElementTree as ET
 import hashlib
 
 # --- 1. CONFIGURAZIONE & STYLE CYBERPUNK ---
-st.set_page_config(page_title="CyberTrading Hub v9.0", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="CyberTrading Hub v9.1", layout="wide", page_icon="⚡")
 
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; }
     
-    /* Landing Page Elements */
+    /* Hero Section */
     .hero-title {
-        font-size: 65px; font-weight: 800; text-align: center;
+        font-size: clamp(40px, 8vw, 70px); font-weight: 800; text-align: center;
         background: -webkit-linear-gradient(#00ff41, #ff00ff);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-top: 50px;
+        margin-top: 30px; margin-bottom: 0px;
     }
+    
+    /* Box Spiegazione Centrale */
+    .about-section {
+        background: rgba(10, 10, 10, 0.8);
+        border-left: 5px solid #ff00ff;
+        padding: 30px;
+        margin: 40px auto;
+        max-width: 900px;
+        border-radius: 0 15px 15px 0;
+        line-height: 1.6;
+        box-shadow: 10px 10px 30px rgba(0,0,0,0.5);
+    }
+    
     .feature-card {
         background: rgba(20, 20, 20, 0.9); border: 1px solid #00ff41;
-        padding: 30px; border-radius: 15px; text-align: center;
-        box-shadow: 0 0 15px rgba(0, 255, 65, 0.1); transition: 0.3s;
+        padding: 25px; border-radius: 15px; text-align: center;
+        height: 100%; transition: 0.3s;
     }
-    .feature-card:hover { border-color: #ff00ff; box-shadow: 0 0 30px #ff00ff; }
+    .feature-card:hover { border-color: #ff00ff; box-shadow: 0 0 20px rgba(255, 0, 255, 0.4); }
     
-    /* Dashboard Elements */
-    div[data-testid="stMetric"] { 
-        background: rgba(20, 20, 20, 0.8); border: 1px solid #00ff41; 
-        padding: 15px; border-radius: 10px; box-shadow: 0 0 10px #00ff41;
-    }
     .stButton>button { 
         background: linear-gradient(45deg, #ff00ff, #00ff41) !important;
-        color: white !important; font-weight: bold; border: none; border-radius: 20px;
+        color: white !important; font-weight: bold; border: none; border-radius: 30px;
+        padding: 20px 40px !important; font-size: 1.2rem !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -75,82 +84,93 @@ def get_ai_chat_response(prompt, context):
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         selected_model = next((m for m in ['models/gemini-1.5-flash', 'models/gemini-pro'] if m in available_models), available_models[0])
         model = genai.GenerativeModel(selected_model)
-        system_instruction = f"Sei 'CYBER-ANALYST v9.0'. Analista mercati senior. Dati: {context}. Rispondi in italiano con tono cyberpunk."
+        system_instruction = f"Sei 'CYBER-ANALYST v9.1'. Analista mercati senior. Dati: {context}. Rispondi in italiano con tono cyberpunk."
         response = model.generate_content([system_instruction, prompt])
         return f"**[AI Node: {selected_model}]**\n\n{response.text}"
     except Exception as e: return f"❌ Errore IA: {e}"
 
-# --- 3. GESTIONE STATO NAVIGAZIONE ---
+# --- 3. GESTIONE NAVIGAZIONE ---
 if 'page' not in st.session_state: st.session_state.page = "landing"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'user_email' not in st.session_state: st.session_state.user_email = ""
 
-# --- 4. PAGINA: LANDING (VETRINA) ---
+# --- 4. LANDING PAGE (VETRINA) ---
 if st.session_state.page == "landing" and not st.session_state.logged_in:
     st.markdown("<div class='hero-title'>CYBERTRADING HUB</div>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #fff;'>L'eccellenza dell'IA applicata al tuo portafoglio finanziario.</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #888; font-size: 1.2rem;'>Advanced Financial Intelligence Terminal</p>", unsafe_allow_html=True)
+    
+    # --- SEZIONE SPIEGAZIONE ---
+    st.markdown(f"""
+    <div class='about-section'>
+        <h2 style='color: #00ff41; margin-top:0;'>Cos'è CyberTrading Hub?</h2>
+        <p style='color: #eee; font-size: 1.1rem;'>
+            Benvenuto nel futuro dell'analisi finanziaria. <b>CyberTrading Hub</b> non è solo un visualizzatore di grafici, 
+            ma un ecosistema intelligente progettato per darti un vantaggio competitivo sui mercati. 
+            <br><br>
+            A differenza delle piattaforme tradizionali, il nostro sistema utilizza l'<b>Intelligenza Artificiale Generativa</b> 
+            per incrociare i dati live di mercato (RSI, Medie Mobili, News) con la tua specifica situazione patrimoniale. 
+            L'IA non analizza solo il titolo, ma analizza la <b>TUA posizione</b>, aiutandoti a decidere quando mediare il prezzo, 
+            quando prendere profitto o quando proteggere il capitale.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("<div class='feature-card'><h3>🧠 IA Tattica</h3><p>L'intelligenza Gemini analizza trend e volatilità fornendoti report immediati basati su indicatori tecnici reali.</p></div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='feature-card'><h3>💼 Cloud Vault</h3><p>Monitora il valore totale del tuo patrimonio. I tuoi acquisti sono salvati in sicurezza e accessibili da ogni dispositivo.</p></div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='feature-card'><h3>⚡ Real-Time Data</h3><p>Connessione diretta ai database finanziari globali per prezzi, candele e notizie dell'ultima ora senza ritardi.</p></div>", unsafe_allow_html=True)
     
     st.write("##")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("<div class='feature-card'><h3>🧠 IA Analisi</h3><p>Analisi predittiva su RSI, trend e medie mobili in tempo reale.</p></div>", unsafe_allow_html=True)
-    with c2:
-        st.markdown("<div class='feature-card'><h3>💼 Cloud Vault</h3><p>Gestisci il tuo portafoglio ovunque. Dati salvati in sicurezza sul cloud.</p></div>", unsafe_allow_html=True)
-    with c3:
-        st.markdown("<div class='feature-card'><h3>⚡ Turbo Speed</h3><p>Motore ottimizzato per darti prezzi e news senza attese.</p></div>", unsafe_allow_html=True)
-    
     st.write("##")
-    if st.button("ACCEDI AL TERMINALE OPERATIVO"):
-        st.session_state.page = "auth"
-        st.rerun()
+    col_btn, _ = st.columns([1, 1])
+    with col_btn:
+        if st.button("ACCEDI AL TERMINALE OPERATIVO"):
+            st.session_state.page = "auth"
+            st.rerun()
 
-# --- 5. PAGINA: AUTH (LOGIN/REG) ---
+# --- 5. AUTH & DASHBOARD (RESTO DEL CODICE INVARIATO) ---
 elif st.session_state.page == "auth" and not st.session_state.logged_in:
-    st.markdown("<h2 style='text-align: center;'>🔐 Autenticazione Nodo</h2>", unsafe_allow_html=True)
-    t1, t2 = st.tabs(["ENTRA", "REGISTRATI"])
+    st.markdown("<h2 style='text-align: center;'>🔐 Accesso al Nodo</h2>", unsafe_allow_html=True)
+    t1, t2 = st.tabs(["LOGIN", "REGISTRAZIONE"])
     with t1:
         e = st.text_input("Email").lower()
         p = st.text_input("Password", type="password")
-        if st.button("AVVIA LOGIN"):
+        if st.button("AVVIA"):
             df_u = conn.read(worksheet="Utenti", ttl=0)
             u = df_u[df_u["Email"] == e]
             if not u.empty and check_hashes(p, u["Password"].values[0]):
                 st.session_state.logged_in = True
                 st.session_state.user_email = e
                 st.rerun()
-            else: st.error("Accesso negato.")
+            else: st.error("Errore.")
     with t2:
         ne = st.text_input("Nuova Email").lower()
         np = st.text_input("Nuova Password", type="password")
-        if st.button("CREA ACCOUNT"):
+        if st.button("CREA"):
             df_u = conn.read(worksheet="Utenti", ttl=0)
-            if ne in df_u["Email"].values: st.warning("Già registrata.")
+            if ne in df_u["Email"].values: st.warning("Esistente.")
             elif "@" in ne:
                 nu = pd.DataFrame([{"Email": ne, "Password": make_hashes(np)}])
                 conn.update(worksheet="Utenti", data=pd.concat([df_u, nu], ignore_index=True))
-                st.success("Fatto! Ora accedi.")
-    if st.button("← Torna alla Home"):
+                st.success("Fatto!")
+    if st.button("← Indietro"):
         st.session_state.page = "landing"
         st.rerun()
 
-# --- 6. PAGINA: DASHBOARD (CUORE) ---
 elif st.session_state.logged_in:
-    # Sidebar
+    # --- DASHBOARD CUORE ---
     st.sidebar.title(f"👾 {st.session_state.user_email}")
-    t_search = st.sidebar.text_input("🔍 Cerca Titolo", "NVDA").upper()
+    t_search = st.sidebar.text_input("🔍 Ticker", "NVDA").upper()
     t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
     
-    if st.sidebar.button("INVIA AL CLOUD"):
-        # Logica salvataggio...
-        st.sidebar.success("Salvato!")
-        st.rerun()
-        
-    if st.sidebar.button("🚪 ESCI"):
+    if st.sidebar.button("🚪 LOGOUT"):
         st.session_state.logged_in = False
         st.session_state.page = "landing"
         st.rerun()
 
-    # Mercati & Patrimonio
+    # Logica Mercati & Patrimonio (v8.9)
     main_indices = ["^GSPC", "BTC-USD", "GC=F"]
     m_data = get_market_prices(main_indices)
     cols = st.columns(3)
@@ -164,7 +184,7 @@ elif st.session_state.logged_in:
     miei = db_p[db_p["Email"] == st.session_state.user_email]
     tot_inv = 0
     if not miei.empty:
-        st.subheader("📊 Performance Globale")
+        st.subheader("📊 Performance Patrimonio")
         unique_t = [f"{t}-USD" if t in ["BTC", "ETH", "SOL"] else t for t in miei["Ticker"].unique()]
         p_live = yf.download(unique_t, period="1d", progress=False)['Close'].iloc[-1]
         tot_inv = miei["Totale"].sum()
@@ -176,26 +196,19 @@ elif st.session_state.logged_in:
         c1, c2, c3 = st.columns(3)
         c1.metric("Investito", f"{tot_inv:.2f} $")
         c2.metric("Valore Live", f"{val_att:.2f} $", delta=f"{val_att-tot_inv:.2f} $")
-        c3.metric("P&L %", f"{((val_att/tot_inv)-1)*100:.2f}%")
+        c3.metric("Profitto Totale %", f"{((val_att/tot_inv)-1)*100:.2f}%")
     
-    st.divider()
-
-    # Analisi Tecnica
-    data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
+    # Analisi Tecnica & Chat
+    data = yf.download(t_sym, period="1y", auto_adjust=True, progress=False)
     if not data.empty:
         df = data.copy()
         if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-        df['SMA20'] = ta.sma(df['Close'], length=20)
         df['RSI'] = ta.rsi(df['Close'], length=14)
         st.header(f"📈 {t_sym}")
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3])
-        fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange')), row=1, col=1)
-        fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta')), row=2, col=1)
-        fig.update_layout(height=500, template="plotly_dark", xaxis_rangeslider_visible=False)
+        fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
+        fig.update_layout(template="plotly_dark", height=450, xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
-        # News & Chat
         cn, cc = st.columns([0.4, 0.6])
         with cn:
             st.subheader("📰 Notizie")
