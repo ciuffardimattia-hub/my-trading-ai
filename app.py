@@ -1,4 +1,4 @@
-import streamlit as st
+        import streamlit as st
 import yfinance as yf
 import pandas_ta as ta
 import pandas as pd
@@ -10,33 +10,45 @@ import requests
 import xml.etree.ElementTree as ET
 import hashlib
 
-# --- 1. CONFIGURAZIONE E DIZIONARIO (v9.3 Hybrid) ---
-st.set_page_config(page_title="CyberTrading v9.4", layout="wide", page_icon="🌐")
+# --- 1. DIZIONARIO MULTILINGUA INTEGRALE ---
+st.set_page_config(page_title="CyberTrading Hub v9.7", layout="wide", page_icon="🌐")
 
 LANGUAGES = {
     "IT": {
-        "hero_t": "CYBERTRADING HUB",
-        "about_h": "Cos'è CyberTrading Hub?",
-        "about_p": "Benvenuto nel futuro dell'analisi finanziaria. CyberTrading Hub è un ecosistema intelligente progettato per darti un vantaggio competitivo. Utilizziamo l'IA per incrociare i dati live con la TUA specifica situazione patrimoniale.",
-        "feat_ia": "IA Tattica", "feat_ia_p": "Analisi predittiva su trend e indicatori tecnici.",
-        "feat_cloud": "Cloud Vault", "feat_cloud_p": "Monitora il tuo patrimonio ovunque in sicurezza.",
-        "feat_turbo": "Dati Real-Time", "feat_turbo_p": "Connessione diretta ai mercati globali.",
-        "btn_enter": "ENTRA NEL HUB", "btn_login": "LOGIN", "btn_reg": "REGISTRATI",
+        "hero_t": "CYBERTRADING HUB", "hero_s": "L'intelligenza artificiale al servizio del tuo patrimonio.",
+        "about_h": "Perché scegliere CyberTrading Hub?",
+        "about_p": "In un mercato dominato dagli algoritmi, l'investitore retail ha bisogno di strumenti avanzati. Il nostro Hub fonde i dati live di Yahoo Finance con la potenza di Google Gemini per darti un analista privato 24/7. Non solo grafici, ma decisioni basate su RSI, Medie Mobili e sulla TUA esposizione finanziaria.",
+        "feat_ia": "Analisi Tattica IA", "feat_ia_p": "L'IA interpreta RSI e SMA20 per segnalarti ipercomprato o trend ribassisti.",
+        "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "I tuoi dati sono salvati su cloud sicuri, accessibili solo tramite il tuo nodo.",
+        "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali per notizie e prezzi istantanei.",
+        "btn_enter": "ENTRA NEL TERMINALE", "btn_login": "ACCEDI", "btn_reg": "REGISTRATI",
         "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo",
-        "port_perf": "Performance Patrimonio", "port_inv": "Investito", "port_val": "Valore Live",
-        "chat_title": "AI Advisor", "news_title": "Data Stream News"
+        "port_inv": "Investito", "port_val": "Valore Live", "port_perf": "Performance Patrimonio",
+        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo"
     },
     "EN": {
-        "hero_t": "CYBERTRADING HUB",
-        "about_h": "What is CyberTrading Hub?",
-        "about_p": "Welcome to the future of financial analysis. CyberTrading Hub is an intelligent ecosystem designed to give you a competitive edge. We use AI to cross live data with YOUR specific financial situation.",
-        "feat_ia": "Tactical AI", "feat_ia_p": "Predictive analysis on trends and technical indicators.",
-        "feat_cloud": "Cloud Vault", "feat_cloud_p": "Monitor your wealth anywhere securely.",
-        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
-        "btn_enter": "ENTER HUB", "btn_login": "LOGIN", "btn_reg": "REGISTER",
+        "hero_t": "CYBERTRADING HUB", "hero_s": "Artificial intelligence at the service of your assets.",
+        "about_h": "Why choose CyberTrading Hub?",
+        "about_p": "In a market dominated by algorithms, retail investors need advanced tools. Our Hub merges live data from Yahoo Finance with the power of Google Gemini to give you a 24/7 private analyst. Not just charts, but decisions based on RSI, Moving Averages, and YOUR financial exposure.",
+        "feat_ia": "AI Tactical Analysis", "feat_ia_p": "AI interprets RSI and SMA20 to alert you to overbought or bearish trends.",
+        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Your data is saved on secure clouds, accessible only through your node.",
+        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to world markets for instant news and prices.",
+        "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
         "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker",
-        "port_perf": "Portfolio Performance", "port_inv": "Invested", "port_val": "Live Value",
-        "chat_title": "AI Advisor", "news_title": "News Feed"
+        "port_inv": "Invested", "port_val": "Live Value", "port_perf": "Portfolio Performance",
+        "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication"
+    },
+    "ES": {
+        "hero_t": "CYBERTRADING HUB", "hero_s": "Inteligencia artificial al servicio de su patrimonio.",
+        "about_h": "¿Por qué elegir CyberTrading Hub?",
+        "about_p": "En un mercado dominado por algoritmos, el inversor retail necesita herramientas avanzadas. Nuestro Hub fusiona datos en vivo con la potencia de Google Gemini para darle un analista privado 24/7.",
+        "feat_ia": "Análisis Táctico IA", "feat_ia_p": "La IA interpreta RSI y SMA20 para alertarle sobre tendencias.",
+        "feat_cloud": "Cartera Criptografiada", "feat_cloud_p": "Sus datos se guardan en nubes seguras, accesibles solo por su nodo.",
+        "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados mundiales.",
+        "btn_enter": "ENTRAR AL TERMINAL", "btn_login": "CONECTAR", "btn_reg": "REGISTRAR",
+        "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker",
+        "port_inv": "Invertido", "port_val": "Valor en Vivo", "port_perf": "Rendimiento de Cartera",
+        "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación de Nodo"
     }
 }
 
@@ -44,10 +56,10 @@ LANGUAGES = {
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; }
-    .hero-title { font-size: 60px; font-weight: 800; text-align: center; background: -webkit-linear-gradient(#00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .about-section { background: rgba(10, 10, 10, 0.8); border-left: 5px solid #ff00ff; padding: 25px; margin: 30px auto; max-width: 900px; border-radius: 0 15px 15px 0; }
-    div[data-testid="stMetric"] { background: rgba(20, 20, 20, 0.8); border: 1px solid #00ff41; border-radius: 10px; padding: 15px; }
-    .stButton>button { background: linear-gradient(45deg, #ff00ff, #00ff41) !important; color: white !important; font-weight: bold; border-radius: 30px; }
+    .hero-title { font-size: clamp(40px, 8vw, 70px); font-weight: 800; text-align: center; background: -webkit-linear-gradient(#00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 20px; }
+    .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 30px auto; max-width: 950px; border-radius: 0 15px 15px 0; }
+    div[data-testid="stMetric"] { background: rgba(20, 20, 20, 0.8); border: 1px solid #00ff41; border-radius: 10px; padding: 15px; box-shadow: 0 0 10px rgba(0,255,65,0.2); }
+    .stButton>button { background: linear-gradient(45deg, #ff00ff, #00ff41) !important; color: white !important; font-weight: bold; border-radius: 30px; padding: 10px 25px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -55,7 +67,6 @@ st.markdown("""
 if 'lang' not in st.session_state: st.session_state.lang = "IT"
 if 'page' not in st.session_state: st.session_state.page = "landing"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-
 L = LANGUAGES[st.session_state.lang]
 
 # --- 4. FUNZIONI CORE (FIXED) ---
@@ -67,41 +78,61 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 @st.cache_data(ttl=300)
 def get_market_prices(tickers):
     try:
-        # FIX: Usiamo 5 giorni per evitare NaN se il mercato è appena chiuso
-        df = yf.download(list(tickers), period="5d", interval="1d", group_by='ticker', progress=False)
+        # Recupero 7gg per evitare NaN nei weekend
+        df = yf.download(list(tickers), period="7d", interval="1d", group_by='ticker', progress=False)
         return df
     except: return None
+
+@st.cache_data(ttl=600)
+def get_cached_news(symbol):
+    news = []
+    q = symbol.replace("-USD", "")
+    url = f"https://news.google.com/rss/search?q={q}+stock+news+when:7d&hl=it&gl=IT&ceid=IT:it"
+    try:
+        r = requests.get(url, timeout=4)
+        root = ET.fromstring(r.content)
+        for i in root.findall('.//item')[:5]:
+            news.append({'t': i.find('title').text, 'l': i.find('link').text})
+    except: pass
+    return news
 
 def get_ai_chat_response(prompt, context, lang):
     try:
         api_key = st.secrets.get("GEMINI_API_KEY")
         if not api_key: return "API Key Error."
         genai.configure(api_key=api_key)
-        # FIX: Utilizzo nome modello diretto per evitare 404 v1beta
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        sys_i = f"Role: Cyber-Analyst. Data: {context}. Respond in {lang}. Tone: Professional Cyberpunk."
+        # Scanner per modelli (Fix 404)
+        model_list = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        selected_model = "models/gemini-1.5-flash"
+        if "models/gemini-1.5-flash" not in model_list: selected_model = model_list[0]
+        
+        model = genai.GenerativeModel(selected_model)
+        sys_i = f"Role: Cyber-Analyst v9.7. Data: {context}. Respond in {lang}. Analyze RSI and SMA20 trends."
         res = model.generate_content([sys_i, prompt])
         return res.text
-    except Exception as e: return f"Error IA: {str(e)}"
+    except Exception as e: return f"AI Error: {str(e)}"
 
-# --- 5. LANDING PAGE (v9.1 DESIGN) ---
+# --- 5. LANDING PAGE ---
 if st.session_state.page == "landing" and not st.session_state.logged_in:
-    st.session_state.lang = st.selectbox("🌐 Select Language", ["IT", "EN"], index=["IT", "EN"].index(st.session_state.lang))
+    st.session_state.lang = st.selectbox("🌐 Select Language", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #888;'>{L['hero_s']}</p>", unsafe_allow_html=True)
+    
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
-    c1.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:10px; text-align:center;'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
-    c2.markdown(f"<div style='border:1px solid #ff00ff; padding:20px; border-radius:10px; text-align:center;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
-    c3.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:10px; text-align:center;'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
+    c1.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div style='border:1px solid #ff00ff; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
+    c3.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
     
+    st.write("##")
     if st.button(L['btn_enter']):
         st.session_state.page = "auth"
         st.rerun()
 
-# --- 6. AUTH (v9.0) ---
+# --- 6. AUTH ---
 elif st.session_state.page == "auth" and not st.session_state.logged_in:
-    st.markdown("<h2 style='text-align: center;'>🔐 Accesso</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: #ff00ff;'>{L['auth_title']}</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs([L['btn_login'], L['btn_reg']])
     with t1:
         e = st.text_input("Email").lower()
@@ -113,23 +144,21 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
                 st.session_state.logged_in, st.session_state.user_email = True, e
                 st.rerun()
     if st.button(L['btn_back']):
-        st.session_state.page = "landing"
-        st.rerun()
+        st.session_state.page = "landing"; st.rerun()
 
-# --- 7. DASHBOARD (FIXED METRICS) ---
+# --- 7. DASHBOARD OPERATIVA ---
 elif st.session_state.logged_in:
-    st.sidebar.title(f"👾 {st.session_state.user_email}")
+    st.sidebar.title(f"👾 Hub: {st.session_state.user_email}")
     t_search = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
     t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
     
-    # FIX NAN: Gestione indici con fallback
+    # Indici Live (Fix NaN)
     m_data = get_market_prices(["^GSPC", "BTC-USD", "GC=F"])
     c_m = st.columns(3)
     for i, s in enumerate(["^GSPC", "BTC-USD", "GC=F"]):
         try:
-            # Prendiamo l'ultimo valore non nullo disponibile
-            last_val = m_data[s]['Close'].dropna().iloc[-1]
-            c_m[i].metric(s.replace("^GSPC", "S&P 500"), f"{last_val:.2f}")
+            val = m_data[s]['Close'].ffill().iloc[-1]
+            c_m[i].metric(s.replace("^GSPC", "S&P 500"), f"{val:.2f}")
         except: c_m[i].metric(s, "N/A")
 
     st.divider()
@@ -141,44 +170,54 @@ elif st.session_state.logged_in:
     if not miei.empty:
         st.subheader(f"📊 {L['port_perf']}")
         u_t = [f"{t}-USD" if t in ["BTC", "ETH", "SOL"] else t for t in miei["Ticker"].unique()]
-        p_l = yf.download(u_t, period="5d", progress=False)['Close']
+        p_l = yf.download(u_t, period="7d", progress=False)['Close'].ffill()
         tot_inv = miei["Totale"].sum()
         val_att = 0
         for _, r in miei.iterrows():
             tk = f"{r['Ticker']}-USD" if r['Ticker'] in ["BTC", "ETH", "SOL"] else r['Ticker']
-            pr = p_l[tk].dropna().iloc[-1] if len(u_t) > 1 else p_l.dropna().iloc[-1]
-            val_att += pr * r["Quantità"]
+            price = p_l[tk].iloc[-1] if len(u_t) > 1 else p_l.iloc[-1]
+            val_att += price * r["Quantità"]
         c1, c2, c3 = st.columns(3)
         c1.metric(L['port_inv'], f"{tot_inv:.2f} $")
         c2.metric(L['port_val'], f"{val_att:.2f} $", delta=f"{val_att-tot_inv:.2f} $")
-        c3.metric("ROI %", f"{((val_att/tot_inv)-1)*100:.2f}%")
+        c3.metric("Total ROI %", f"{((val_att/tot_inv)-1)*100:.2f}%")
 
-    # Grafico e Chat (v9.0 style)
-    data = yf.download(t_sym, period="1y", auto_adjust=True, progress=False)
+    # Grafico con SMA20 e RSI
+    data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
     if not data.empty:
         df = data.copy()
         if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+        df['SMA20'] = ta.sma(df['Close'], length=20)
         df['RSI'] = ta.rsi(df['Close'], length=14)
-        st.header(f"📈 {t_sym}")
-        fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
-        fig.update_layout(template="plotly_dark", height=400, xaxis_rangeslider_visible=False)
+        
+        st.header(f"📈 {t_sym} Analytical Feed")
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
+        fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange', width=2)), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta', width=2)), row=2, col=1)
+        fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color="cyan", row=2, col=1)
+        fig.update_layout(template="plotly_dark", height=550, xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
         cn, cc = st.columns([0.4, 0.6])
+        with cn:
+            st.subheader(f"📰 {L['news_title']}")
+            news = get_cached_news(t_search)
+            for n in news: st.markdown(f"[{n['t']}]({n['l']})")
         with cc:
             st.subheader(f"💬 {L['chat_title']}")
             if 'msgs' not in st.session_state: st.session_state.msgs = []
             for m in st.session_state.msgs:
                 with st.chat_message(m["role"]): st.markdown(m["content"])
-            if inp := st.chat_input("Ask..."):
+            if inp := st.chat_input("Command AI..."):
                 st.session_state.msgs.append({"role": "user", "content": inp})
                 with st.chat_message("user"): st.markdown(inp)
                 with st.chat_message("assistant"):
-                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, Portfolio {tot_inv}$"
+                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}, Portfolio {tot_inv}$"
                     res = get_ai_chat_response(inp, ctx, st.session_state.lang)
                     st.markdown(res)
                     st.session_state.msgs.append({"role": "assistant", "content": res})
 
     if st.sidebar.button(L['btn_logout']):
-        st.session_state.logged_in, st.session_state.page = False, "landing"
-        st.rerun()
+        st.session_state.logged_in = False; st.rerun()
