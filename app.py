@@ -221,4 +221,3 @@ elif st.session_state.logged_in:
 
     if st.sidebar.button(L['btn_logout']):
         st.session_state.logged_in = False; st.rerun()
-
