@@ -12,7 +12,7 @@ import hashlib
 import time
 
 # --- 1. CONFIGURAZIONE & STYLE ---
-st.set_page_config(page_title="CyberTrading Hub v9.10", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="CyberTrading Hub v9.11", layout="wide", page_icon="⚡")
 
 LANGUAGES = {
     "IT": {
@@ -23,7 +23,7 @@ LANGUAGES = {
         "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri.",
         "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
         "btn_enter": "ENTRA NEL TERMINALE", "btn_login": "ACCEDI", "btn_reg": "REGISTRATI",
-        "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo",
+        "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo o Nome (es. Apple, Oro, Bitcoin)",
         "side_save_op": "Salva Operazione", "side_price": "Prezzo ($)", "side_qty": "Quantità", "side_btn_save": "SALVA", "side_success": "Salvato!",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo",
         "disclaimer": "⚠️ Disclaimer Legale: CyberTrading Hub è uno strumento di analisi basato su IA. Non costituisce consulenza finanziaria. I mercati sono volatili. Investi a tuo rischio.",
@@ -41,7 +41,7 @@ LANGUAGES = {
         "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds.",
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
         "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
-        "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker",
+        "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker or Name (e.g., Apple, Gold, Bitcoin)",
         "side_save_op": "Save Trade", "side_price": "Price ($)", "side_qty": "Quantity", "side_btn_save": "SAVE", "side_success": "Saved!",
         "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication",
         "disclaimer": "⚠️ Legal Disclaimer: CyberTrading Hub is an AI-based analysis tool. It does not constitute financial advice. Markets are volatile. Invest at your own risk.",
@@ -59,7 +59,7 @@ LANGUAGES = {
         "feat_cloud": "Cartera Criptografiada", "feat_cloud_p": "Datos guardados en nubes seguras.",
         "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a mercados globales.",
         "btn_enter": "ENTRAR", "btn_login": "CONECTAR", "btn_reg": "REGISTRAR",
-        "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker",
+        "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker o Nombre (ej. Apple, Bitcoin)",
         "side_save_op": "Guardar Op", "side_price": "Precio ($)", "side_qty": "Cant", "side_btn_save": "GUARDAR", "side_success": "¡Guardado!",
         "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación",
         "disclaimer": "⚠️ Aviso Legal: CyberTrading Hub es una herramienta de análisis de IA. No constituye asesoramiento financiero.",
@@ -93,6 +93,28 @@ def make_hashes(p): return hashlib.sha256(str.encode(p)).hexdigest()
 def check_hashes(p, h): return make_hashes(p) == h
 conn = st.connection("gsheets", type=GSheetsConnection)
 
+@st.cache_data(ttl=3600)
+def get_smart_ticker(query):
+    if not query: return "BTC-USD"
+    query_upper = query.upper().strip()
+    
+    # Mappa rapida per i termini più comuni o materie prime italiane
+    quick_map = {"BITCOIN": "BTC-USD", "ETHEREUM": "ETH-USD", "GOLD": "GC=F", "ORO": "GC=F", "PETROLIO": "CL=F", "OIL": "CL=F", "S&P500": "^GSPC", "SP500": "^GSPC", "NASDAQ": "^IXIC", "APPLE": "AAPL", "TESLA": "TSLA", "NVIDIA": "NVDA", "AMAZON": "AMZN"}
+    if query_upper in quick_map:
+        return quick_map[query_upper]
+    
+    # Ricerca dinamica su Yahoo Finance se il nome non è in lista
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        r = requests.get(url, headers=headers, timeout=3)
+        data = r.json()
+        if 'quotes' in data and len(data['quotes']) > 0:
+            return data['quotes'][0]['symbol']
+    except:
+        pass
+    return query_upper # Se fallisce, prova a usare il termine esatto inserito dall'utente
+
 @st.cache_data(ttl=300)
 def get_market_prices(tickers_list):
     try:
@@ -123,7 +145,7 @@ def get_ai_chat_response(prompt, context, lang):
         if "models/gemini-1.5-flash" not in model_list: selected_model = model_list[0]
         model = genai.GenerativeModel(selected_model)
         
-        sys_i = f"Role: Senior Financial Analyst v9.10. Context: {context}. Respond in {lang}. Use technical financial jargon."
+        sys_i = f"Role: Senior Financial Analyst v9.11. Context: {context}. Respond in {lang}. Use technical financial jargon."
         res = model.generate_content([sys_i, prompt])
         return res.text
     except Exception as e: return f"AI Error: {str(e)}"
@@ -142,7 +164,7 @@ if st.session_state.page == "landing" and not st.session_state.logged_in:
     if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
     st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
-# --- 5. AUTH (Con Privacy Policy) ---
+# --- 5. AUTH ---
 elif st.session_state.page == "auth" and not st.session_state.logged_in:
     st.markdown(f"<h2 style='text-align: center; color: #ff00ff;'>{L['auth_title']}</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs([L['btn_login'], L['btn_reg']])
@@ -188,20 +210,20 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
     if st.button(L['btn_back']): st.session_state.page = "landing"; st.rerun()
     st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
-# --- 6. DASHBOARD (Con FAQ e Elimina Account) ---
+# --- 6. DASHBOARD ---
 elif st.session_state.logged_in:
     st.sidebar.title(f"👾 Hub: {st.session_state.user_email}")
     st.session_state.lang = st.sidebar.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
-    t_search = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
-    t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
     
-    # FAQ Expander
+    # Input utente ora processato dallo Smart Ticker
+    t_search_raw = st.sidebar.text_input(L['sidebar_search'], "Bitcoin")
+    t_sym = get_smart_ticker(t_search_raw)
+    
     with st.sidebar.expander(L['faq_title']):
         st.markdown(L['faq_rsi'])
         st.markdown(L['faq_sma'])
         st.markdown(L['faq_prompt'])
     
-    # Input Portafoglio
     with st.sidebar.container(border=True):
         st.subheader(f"💾 {L['side_save_op']}")
         p_acq = st.sidebar.number_input(L['side_price'], min_value=0.0)
@@ -209,7 +231,8 @@ elif st.session_state.logged_in:
         if st.sidebar.button(L['side_btn_save']):
             try:
                 db_p = conn.read(worksheet="Portafoglio", ttl=5)
-                nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_search, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
+                # Salviamo il Ticker ufficiale per pulizia (es. AAPL, non Apple)
+                nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_sym, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
                 conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
                 st.sidebar.success(L['side_success'])
                 time.sleep(1); st.rerun()
@@ -217,20 +240,16 @@ elif st.session_state.logged_in:
             
     if st.sidebar.button(L['btn_logout']): st.session_state.logged_in = False; st.rerun()
     
-    # Impostazioni Account (Eliminazione)
     with st.sidebar.expander(L['settings']):
         st.warning(L['delete_warn'])
         if st.button(L['btn_delete'], type="primary"):
             try:
-                # Elimina da Utenti
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 df_u = df_u[df_u["Email"] != st.session_state.user_email]
                 conn.update(worksheet="Utenti", data=df_u)
-                # Elimina da Portafoglio
                 db_p = conn.read(worksheet="Portafoglio", ttl=0)
                 db_p = db_p[db_p["Email"] != st.session_state.user_email]
                 conn.update(worksheet="Portafoglio", data=db_p)
-                
                 st.session_state.logged_in = False
                 st.session_state.page = "landing"
                 st.rerun()
@@ -257,7 +276,6 @@ elif st.session_state.logged_in:
 
     st.divider()
 
-    # Calcolo Patrimonio Invisibile (Safe Mode per IA)
     tot_inv = 0
     try:
         db_p = conn.read(worksheet="Portafoglio", ttl=5)
@@ -265,7 +283,7 @@ elif st.session_state.logged_in:
         if not miei.empty: tot_inv = miei["Totale"].sum()
     except: pass 
 
-    # Grafico & Chat
+    # Grafico & Chat usando t_sym (che ora è sempre un Ticker ufficiale)
     data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
     if not data.empty:
         df = data.copy()
@@ -285,8 +303,9 @@ elif st.session_state.logged_in:
 
         cn, cc = st.columns([0.4, 0.6])
         with cn:
+            # Ricerca notizie usando il termine originale inserito dall'utente per risultati più naturali
             st.subheader(f"📰 {L['news_title']}")
-            news = get_cached_news(t_search)
+            news = get_cached_news(t_search_raw)
             for n in news: st.markdown(f"[{n['t']}]({n['l']})")
         with cc:
             st.subheader(f"💬 {L['chat_title']}")
@@ -301,3 +320,5 @@ elif st.session_state.logged_in:
                     res = get_ai_chat_response(inp, ctx, st.session_state.lang)
                     st.markdown(res)
                     st.session_state.msgs.append({"role": "assistant", "content": res})
+    else:
+        st.error(f"⚠️ Impossibile trovare dati per '{t_search_raw}'. Prova a usare un nome diverso o il codice esatto.")
