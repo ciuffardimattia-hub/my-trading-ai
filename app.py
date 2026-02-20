@@ -12,7 +12,7 @@ import hashlib
 import time
 
 # --- 1. CONFIGURAZIONE & STYLE ---
-st.set_page_config(page_title="CyberTrading Hub v9.9.3", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="CyberTrading Hub v9.10", layout="wide", page_icon="⚡")
 
 LANGUAGES = {
     "IT": {
@@ -25,7 +25,13 @@ LANGUAGES = {
         "btn_enter": "ENTRA NEL TERMINALE", "btn_login": "ACCEDI", "btn_reg": "REGISTRATI",
         "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo",
         "side_save_op": "Salva Operazione", "side_price": "Prezzo ($)", "side_qty": "Quantità", "side_btn_save": "SALVA", "side_success": "Salvato!",
-        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo"
+        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo",
+        "disclaimer": "⚠️ Disclaimer Legale: CyberTrading Hub è uno strumento di analisi basato su IA. Non costituisce consulenza finanziaria. I mercati sono volatili. Investi a tuo rischio.",
+        "faq_title": "❓ Guida al Terminale", "faq_rsi": "🟣 **RSI (Linea Magenta):** Se supera 70, il titolo è 'Ipercomprato' (rischio calo). Se scende sotto 30 è 'Ipervenduto' (possibile rimbalzo).",
+        "faq_sma": "🟠 **SMA 20 (Linea Arancione):** Media Mobile a 20 giorni. Indica il trend di breve/medio termine.",
+        "faq_prompt": "🤖 **Prompt IA:** Chiedi all'IA: 'Dovrei accumulare a questi prezzi?' oppure 'Qual è il trend di breve periodo?'",
+        "privacy_title": "🔒 Privacy & Sicurezza dei Dati", "privacy_text": "I tuoi dati (email e portafoglio) sono criptati e utilizzati esclusivamente per il funzionamento dell'IA. Non vendiamo i tuoi dati a terzi. Puoi eliminare il tuo account e tutte le tue tracce in qualsiasi momento dalle impostazioni del terminale.",
+        "settings": "⚙️ Impostazioni Account", "btn_delete": "ELIMINA ACCOUNT", "delete_warn": "Azione irreversibile. Procedere?"
     },
     "EN": {
         "hero_t": "CYBERTRADING HUB", "hero_s": "AI at the service of your assets.",
@@ -37,7 +43,13 @@ LANGUAGES = {
         "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
         "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker",
         "side_save_op": "Save Trade", "side_price": "Price ($)", "side_qty": "Quantity", "side_btn_save": "SAVE", "side_success": "Saved!",
-        "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication"
+        "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication",
+        "disclaimer": "⚠️ Legal Disclaimer: CyberTrading Hub is an AI-based analysis tool. It does not constitute financial advice. Markets are volatile. Invest at your own risk.",
+        "faq_title": "❓ Terminal Guide", "faq_rsi": "🟣 **RSI (Magenta Line):** Above 70 means 'Overbought' (risk of drop). Below 30 means 'Oversold' (possible bounce).",
+        "faq_sma": "🟠 **SMA 20 (Orange Line):** 20-day Simple Moving Average. Indicates short/medium-term trend.",
+        "faq_prompt": "🤖 **AI Prompt:** Ask the AI: 'Should I accumulate at these prices?' or 'What is the short-term trend?'",
+        "privacy_title": "🔒 Privacy & Data Security", "privacy_text": "Your data (email and portfolio) is encrypted and used exclusively for AI functioning. We do not sell your data. You can delete your account and all traces at any time from the terminal settings.",
+        "settings": "⚙️ Account Settings", "btn_delete": "DELETE ACCOUNT", "delete_warn": "Irreversible action. Proceed?"
     },
     "ES": {
         "hero_t": "CYBERTRADING HUB", "hero_s": "IA al servicio de su patrimonio.",
@@ -49,7 +61,13 @@ LANGUAGES = {
         "btn_enter": "ENTRAR", "btn_login": "CONECTAR", "btn_reg": "REGISTRAR",
         "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker",
         "side_save_op": "Guardar Op", "side_price": "Precio ($)", "side_qty": "Cant", "side_btn_save": "GUARDAR", "side_success": "¡Guardado!",
-        "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación"
+        "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación",
+        "disclaimer": "⚠️ Aviso Legal: CyberTrading Hub es una herramienta de análisis de IA. No constituye asesoramiento financiero.",
+        "faq_title": "❓ Guía del Terminal", "faq_rsi": "🟣 **RSI (Línea Magenta):** Por encima de 70 es 'Sobrecomprado'. Por debajo de 30 es 'Sobrevendido'.",
+        "faq_sma": "🟠 **SMA 20 (Línea Naranja):** Indica la tendencia a corto/medio plazo.",
+        "faq_prompt": "🤖 **Prompt IA:** Pregunta a la IA: '¿Debería acumular a estos precios?'",
+        "privacy_title": "🔒 Privacidad y Seguridad", "privacy_text": "Tus datos están encriptados y no se venden a terceros. Puedes eliminar tu cuenta en cualquier momento.",
+        "settings": "⚙️ Configuración", "btn_delete": "ELIMINAR CUENTA", "delete_warn": "Acción irreversible. ¿Proceder?"
     }
 }
 
@@ -60,6 +78,7 @@ st.markdown("""
     .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 30px auto; max-width: 950px; border-radius: 0 15px 15px 0; }
     div[data-testid="stMetric"] { background: rgba(20, 20, 20, 0.8); border: 1px solid #00ff41; border-radius: 10px; padding: 10px; box-shadow: 0 0 5px rgba(0,255,65,0.2); }
     .stButton>button { background: linear-gradient(45deg, #ff00ff, #00ff41) !important; color: white !important; font-weight: bold; border-radius: 30px; }
+    .legal-disclaimer { text-align: center; color: #555; font-size: 12px; margin-top: 50px; padding: 10px; border-top: 1px solid #333; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -104,7 +123,7 @@ def get_ai_chat_response(prompt, context, lang):
         if "models/gemini-1.5-flash" not in model_list: selected_model = model_list[0]
         model = genai.GenerativeModel(selected_model)
         
-        sys_i = f"Role: Senior Financial Analyst v9.9.3. Context: {context}. Respond in {lang}. Use technical financial jargon."
+        sys_i = f"Role: Senior Financial Analyst v9.10. Context: {context}. Respond in {lang}. Use technical financial jargon."
         res = model.generate_content([sys_i, prompt])
         return res.text
     except Exception as e: return f"AI Error: {str(e)}"
@@ -121,92 +140,103 @@ if st.session_state.page == "landing" and not st.session_state.logged_in:
     c3.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
     st.write("##")
     if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
+    st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
-# --- 5. AUTH (FIX ANTI-BLOCCO E ANTI-SPAZI) ---
+# --- 5. AUTH (Con Privacy Policy) ---
 elif st.session_state.page == "auth" and not st.session_state.logged_in:
     st.markdown(f"<h2 style='text-align: center; color: #ff00ff;'>{L['auth_title']}</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs([L['btn_login'], L['btn_reg']])
     
     with t1:
-        # .strip() taglia via gli spazi vuoti inseriti per sbaglio
         e = st.text_input("Email").lower().strip()
         p = st.text_input("Password", type="password").strip()
-        
         if st.button(L['btn_login']):
             try:
-                # Leggiamo il database
                 df_u = conn.read(worksheet="Utenti", ttl=0)
-                
-                # PULIZIA ESTREMA: Creiamo una colonna sicura senza spazi e tutta minuscola
                 df_u["Email_Safe"] = df_u["Email"].astype(str).str.strip().str.lower()
-                
-                # Cerchiamo l'utente
                 u = df_u[df_u["Email_Safe"] == e]
-                
                 if not u.empty:
-                    # Estraiamo l'hash della password e togliamo eventuali spazi invisibili
                     db_hash = str(u["Password"].values[0]).strip()
-                    
                     if check_hashes(p, db_hash):
                         st.session_state.logged_in = True
                         st.session_state.user_email = e
                         st.rerun()
-                    else:
-                        st.error("Accesso negato. Password errata.")
-                else:
-                    st.error("Accesso negato. Utente non trovato.")
-            except Exception as ex:
-                st.error(f"⚠️ Errore connessione Google Sheets: {ex}")
+                    else: st.error("Accesso negato. Password errata.")
+                else: st.error("Accesso negato. Utente non trovato.")
+            except Exception as ex: st.error(f"⚠️ Errore connessione Google Sheets.")
 
     with t2:
         ne = st.text_input("Nuova Email").lower().strip()
         np = st.text_input("Nuova Password", type="password").strip()
-        
         if st.button(L['btn_reg']):
             try:
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 if "Email" not in df_u.columns: df_u = pd.DataFrame(columns=["Email", "Password"])
                 df_u["Email_Safe"] = df_u["Email"].astype(str).str.strip().str.lower()
-                
-                if ne in df_u["Email_Safe"].values:
-                    st.warning("Email già registrata.")
+                if ne in df_u["Email_Safe"].values: st.warning("Email già registrata.")
                 elif "@" in ne:
-                    # Rimuoviamo la colonna "Safe" prima di salvare per non sporcare il foglio
                     df_to_save = df_u.drop(columns=["Email_Safe"])
                     nu = pd.DataFrame([{"Email": ne, "Password": make_hashes(np)}])
                     conn.update(worksheet="Utenti", data=pd.concat([df_to_save, nu], ignore_index=True))
                     st.success("Account creato! Ora fai il login.")
-            except Exception as ex:
-                st.error(f"⚠️ Errore creazione account: {ex}")
+            except Exception as ex: st.error(f"⚠️ Errore creazione account.")
+    
+    st.write("---")
+    with st.expander(L['privacy_title']):
+        st.write(L['privacy_text'])
 
     if st.button(L['btn_back']): st.session_state.page = "landing"; st.rerun()
+    st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
-# --- 6. DASHBOARD ---
+# --- 6. DASHBOARD (Con FAQ e Elimina Account) ---
 elif st.session_state.logged_in:
-    # Sidebar
     st.sidebar.title(f"👾 Hub: {st.session_state.user_email}")
     st.session_state.lang = st.sidebar.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     t_search = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
     t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
+    
+    # FAQ Expander
+    with st.sidebar.expander(L['faq_title']):
+        st.markdown(L['faq_rsi'])
+        st.markdown(L['faq_sma'])
+        st.markdown(L['faq_prompt'])
     
     # Input Portafoglio
     with st.sidebar.container(border=True):
         st.subheader(f"💾 {L['side_save_op']}")
         p_acq = st.sidebar.number_input(L['side_price'], min_value=0.0)
         q_acq = st.sidebar.number_input(L['side_qty'], min_value=0.0)
-        
         if st.sidebar.button(L['side_btn_save']):
             try:
                 db_p = conn.read(worksheet="Portafoglio", ttl=5)
                 nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_search, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
                 conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
                 st.sidebar.success(L['side_success'])
-                time.sleep(1)
-                st.rerun()
-            except Exception as ex:
-                st.sidebar.error(f"Errore salvataggio: {ex}")
+                time.sleep(1); st.rerun()
+            except: st.sidebar.error("Errore salvataggio.")
             
     if st.sidebar.button(L['btn_logout']): st.session_state.logged_in = False; st.rerun()
+    
+    # Impostazioni Account (Eliminazione)
+    with st.sidebar.expander(L['settings']):
+        st.warning(L['delete_warn'])
+        if st.button(L['btn_delete'], type="primary"):
+            try:
+                # Elimina da Utenti
+                df_u = conn.read(worksheet="Utenti", ttl=0)
+                df_u = df_u[df_u["Email"] != st.session_state.user_email]
+                conn.update(worksheet="Utenti", data=df_u)
+                # Elimina da Portafoglio
+                db_p = conn.read(worksheet="Portafoglio", ttl=0)
+                db_p = db_p[db_p["Email"] != st.session_state.user_email]
+                conn.update(worksheet="Portafoglio", data=db_p)
+                
+                st.session_state.logged_in = False
+                st.session_state.page = "landing"
+                st.rerun()
+            except: st.error("Errore eliminazione account.")
+
+    st.sidebar.markdown(f"<div style='margin-top: 30px; font-size: 11px; color: #555;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
     # --- TOP MARKET BAR ---
     tickers_map = {"BTC-USD": "Bitcoin", "GC=F": "Gold", "^IXIC": "Nasdaq", "^GSPC": "S&P 500", "NVDA": "Nvidia", "TSLA": "Tesla"}
