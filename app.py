@@ -12,16 +12,16 @@ import hashlib
 import time
 
 # --- 1. CONFIGURAZIONE & STYLE ---
-st.set_page_config(page_title="Market-Core.ai v9.12", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="Market-Core.ai v9.13", layout="wide", page_icon="⚡")
 
 LANGUAGES = {
     "IT": {
         "hero_t": "MARKET-CORE.AI", "hero_s": "L'intelligenza artificiale al servizio del tuo patrimonio.",
         "about_h": "Perché scegliere Market-Core?",
         "about_p": "In un mercato dominato dagli algoritmi, l'investitore retail ha bisogno di strumenti avanzati. Il nostro Hub fonde i dati live con la potenza di Google Gemini per darti un analista privato 24/7.",
-        "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA20.",
-        "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri.",
-        "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
+        "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA20 in tempo reale.",
+        "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "I tuoi dati salvati su un'infrastruttura sicura.",
+        "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati globali.",
         "btn_enter": "ENTRA NEL TERMINALE", "btn_login": "ACCEDI", "btn_reg": "REGISTRATI",
         "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo o Nome (es. Apple, Oro, Bitcoin)",
         "side_save_op": "Salva Operazione", "side_price": "Prezzo ($)", "side_qty": "Quantità", "side_btn_save": "SALVA", "side_success": "Salvato!",
@@ -31,14 +31,14 @@ LANGUAGES = {
         "faq_sma": "🟠 **SMA 20 (Linea Arancione):** Indica il trend di breve/medio termine.",
         "faq_prompt": "🤖 **Prompt IA:** Chiedi all'IA: 'Qual è il trend di breve periodo?'",
         "privacy_title": "🔒 Privacy & Sicurezza", "privacy_text": "I tuoi dati sono criptati e utilizzati esclusivamente per l'IA. Puoi eliminare il tuo account in qualsiasi momento.",
-        "settings": "⚙️ Impostazioni", "btn_delete": "ELIMINA ACCOUNT", "delete_warn": "Azione irreversibile. Procedere?"
+        "settings": "⚙️ Impostazioni Account", "btn_delete": "ELIMINA ACCOUNT", "delete_warn": "Azione irreversibile. Procedere?"
     },
     "EN": {
         "hero_t": "MARKET-CORE.AI", "hero_s": "AI at the service of your assets.",
         "about_h": "Why choose Market-Core?",
         "about_p": "Our Hub merges live data with Google Gemini power to give you a 24/7 private analyst.",
         "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA20.",
-        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds.",
+        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Your data saved on secure infrastructure.",
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
         "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
         "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker or Name (e.g. Apple, Gold)",
@@ -97,7 +97,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_smart_ticker(query):
     if not query: return "BTC-USD"
     query_upper = query.upper().strip()
-    quick_map = {"BITCOIN": "BTC-USD", "ETHEREUM": "ETH-USD", "GOLD": "GC=F", "ORO": "GC=F", "PETROLIO": "CL=F", "OIL": "CL=F", "S&P500": "^GSPC", "SP500": "^GSPC", "NASDAQ": "^IXIC", "APPLE": "AAPL", "TESLA": "TSLA", "NVIDIA": "NVDA"}
+    quick_map = {"BITCOIN": "BTC-USD", "ETHEREUM": "ETH-USD", "GOLD": "GC=F", "ORO": "GC=F", "PETROLIO": "CL=F", "OIL": "CL=F", "S&P500": "^GSPC", "SP500": "^GSPC", "NASDAQ": "^IXIC", "APPLE": "AAPL", "TESLA": "TSLA", "NVIDIA": "NVDA", "AMAZON": "AMZN"}
     if query_upper in quick_map: return quick_map[query_upper]
     url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}"
     try:
@@ -140,7 +140,15 @@ if st.session_state.page == "landing" and not st.session_state.logged_in:
     st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #888;'>{L['hero_s']}</p>", unsafe_allow_html=True)
+    
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
+    
+    # I TRE BOX RIPRISTINATI
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div style='border:1px solid #ff00ff; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
+    c3.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
+    
     st.write("##")
     if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
     st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
@@ -155,7 +163,6 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
         p = st.text_input("Password", type="password").strip()
         if st.button(L['btn_login']):
             try:
-                # Lettura forzata del database (ttl=0) come in 9.9.3
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 df_u["Email_Safe"] = df_u["Email"].astype(str).str.strip().str.lower()
                 u = df_u[df_u["Email_Safe"] == e]
@@ -208,14 +215,16 @@ elif st.session_state.logged_in:
                 nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_sym, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
                 conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
                 st.sidebar.success(L['side_success']); time.sleep(1); st.rerun()
-            except: st.sidebar.error("Errore.")
+            except: st.sidebar.error("Errore salvataggio.")
             
     if st.sidebar.button(L['btn_logout']): st.session_state.logged_in = False; st.rerun()
     
     with st.sidebar.expander(L['settings']):
+        st.warning(L['delete_warn'])
         if st.button(L['btn_delete'], type="primary"):
             df_u = conn.read(worksheet="Utenti", ttl=0); df_u = df_u[df_u["Email"] != st.session_state.user_email]; conn.update(worksheet="Utenti", data=df_u)
-            st.session_state.logged_in = False; st.rerun()
+            db_p = conn.read(worksheet="Portafoglio", ttl=0); db_p = db_p[db_p["Email"] != st.session_state.user_email]; conn.update(worksheet="Portafoglio", data=db_p)
+            st.session_state.logged_in = False; st.session_state.page = "landing"; st.rerun()
 
     st.sidebar.markdown(f"<div style='margin-top: 30px; font-size: 11px; color: #555;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
@@ -230,6 +239,13 @@ elif st.session_state.logged_in:
         except: cols[i].metric(name, "N/A")
 
     st.divider()
+    
+    tot_inv = 0
+    try:
+        db_p = conn.read(worksheet="Portafoglio", ttl=5)
+        miei = db_p[db_p["Email"] == st.session_state.user_email]
+        if not miei.empty: tot_inv = miei["Totale"].sum()
+    except: pass 
 
     # Analisi Grafica & Chat
     data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
@@ -242,6 +258,8 @@ elif st.session_state.logged_in:
         fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
         fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange', width=2)), row=1, col=1)
         fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta', width=2)), row=2, col=1)
+        fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color="cyan", row=2, col=1)
         fig.update_layout(template="plotly_dark", height=500, xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -253,11 +271,16 @@ elif st.session_state.logged_in:
         with cc:
             st.subheader(f"💬 {L['chat_title']}")
             if 'msgs' not in st.session_state: st.session_state.msgs = []
-            if inp := st.chat_input("Chiedi all'IA..."):
+            
+            # Mostra i messaggi precedenti nella chat
+            for m in st.session_state.msgs:
+                with st.chat_message(m["role"]): st.markdown(m["content"])
+                
+            if inp := st.chat_input("Command AI..."):
                 st.session_state.msgs.append({"role": "user", "content": inp})
                 with st.chat_message("user"): st.markdown(inp)
                 with st.chat_message("assistant"):
-                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
+                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}, Portfolio_Invested_Total {tot_inv}$"
                     res = get_ai_chat_response(inp, ctx, st.session_state.lang)
                     st.markdown(res)
                     st.session_state.msgs.append({"role": "assistant", "content": res})
