@@ -12,7 +12,7 @@ import hashlib
 import time
 
 # --- 1. CONFIGURAZIONE & STYLE ---
-st.set_page_config(page_title="Market-Core.ai v9.13", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="Market-Core.ai v9.14", layout="wide", page_icon="⚡")
 
 LANGUAGES = {
     "IT": {
@@ -129,7 +129,18 @@ def get_ai_chat_response(prompt, context, lang):
         api_key = st.secrets.get("GEMINI_API_KEY")
         if not api_key: return "API Key Error."
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("models/gemini-1.5-flash")
+        
+        # --- FIX ERRORE 404: Cacciatore di Modelli Dinamico ---
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        best_model = None
+        for m in available_models:
+            if "gemini-1.5-flash" in m:
+                best_model = m
+                break
+        if not best_model:
+            best_model = available_models[0] # Fallback di sicurezza assoluta
+            
+        model = genai.GenerativeModel(best_model)
         sys_i = f"Role: Senior Financial Analyst. Context: {context}. Respond in {lang}."
         res = model.generate_content([sys_i, prompt])
         return res.text
@@ -143,7 +154,6 @@ if st.session_state.page == "landing" and not st.session_state.logged_in:
     
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
     
-    # I TRE BOX RIPRISTINATI
     c1, c2, c3 = st.columns(3)
     c1.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
     c2.markdown(f"<div style='border:1px solid #ff00ff; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
@@ -153,7 +163,7 @@ if st.session_state.page == "landing" and not st.session_state.logged_in:
     if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
     st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
-# --- 5. AUTH (FONDAMENTA 9.9.3) ---
+# --- 5. AUTH ---
 elif st.session_state.page == "auth" and not st.session_state.logged_in:
     st.markdown(f"<h2 style='text-align: center; color: #ff00ff;'>{L['auth_title']}</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs([L['btn_login'], L['btn_reg']])
@@ -162,6 +172,7 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
         e = st.text_input("Email").lower().strip()
         p = st.text_input("Password", type="password").strip()
         if st.button(L['btn_login']):
+            st.cache_data.clear() # FIX CACHE: Pulizia forzata prima del login
             try:
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 df_u["Email_Safe"] = df_u["Email"].astype(str).str.strip().str.lower()
@@ -180,6 +191,7 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
         ne = st.text_input("Nuova Email").lower().strip()
         np = st.text_input("Nuova Password", type="password").strip()
         if st.button(L['btn_reg']):
+            st.cache_data.clear() # FIX CACHE: Pulizia forzata prima della registrazione
             try:
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 if "Email" not in df_u.columns: df_u = pd.DataFrame(columns=["Email", "Password"])
@@ -272,7 +284,6 @@ elif st.session_state.logged_in:
             st.subheader(f"💬 {L['chat_title']}")
             if 'msgs' not in st.session_state: st.session_state.msgs = []
             
-            # Mostra i messaggi precedenti nella chat
             for m in st.session_state.msgs:
                 with st.chat_message(m["role"]): st.markdown(m["content"])
                 
