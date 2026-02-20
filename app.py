@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 import hashlib
 
 # --- 1. DIZIONARIO MULTILINGUA INTEGRALE ---
-st.set_page_config(page_title="CyberTrading Hub v9.7", layout="wide", page_icon="🌐")
+st.set_page_config(page_title="CyberTrading Hub v9.8", layout="wide", page_icon="🌐")
 
 LANGUAGES = {
     "IT": {
@@ -23,6 +23,7 @@ LANGUAGES = {
         "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali per notizie e prezzi istantanei.",
         "btn_enter": "ENTRA NEL TERMINALE", "btn_login": "ACCEDI", "btn_reg": "REGISTRATI",
         "btn_back": "← Indietro", "btn_logout": "ESCI", "sidebar_search": "Cerca Titolo",
+        "side_save_op": "Salva Operazione", "side_price": "Prezzo di Carico ($)", "side_qty": "Quantità", "side_btn_save": "INVIA AL CLOUD", "side_success": "Sincronizzato!",
         "port_inv": "Investito", "port_val": "Valore Live", "port_perf": "Performance Patrimonio",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo"
     },
@@ -35,6 +36,7 @@ LANGUAGES = {
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to world markets for instant news and prices.",
         "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
         "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker",
+        "side_save_op": "Save Trade", "side_price": "Entry Price ($)", "side_qty": "Quantity", "side_btn_save": "SEND TO CLOUD", "side_success": "Synchronized!",
         "port_inv": "Invested", "port_val": "Live Value", "port_perf": "Portfolio Performance",
         "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication"
     },
@@ -47,6 +49,7 @@ LANGUAGES = {
         "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados mundiales.",
         "btn_enter": "ENTRAR AL TERMINAL", "btn_login": "CONECTAR", "btn_reg": "REGISTRAR",
         "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker",
+        "side_save_op": "Guardar Operación", "side_price": "Precio de Entrada ($)", "side_qty": "Cantidad", "side_btn_save": "ENVIAR A LA NUBE", "side_success": "¡Sincronizado!",
         "port_inv": "Invertido", "port_val": "Valor en Vivo", "port_perf": "Rendimiento de Cartera",
         "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación de Nodo"
     }
@@ -69,7 +72,7 @@ if 'page' not in st.session_state: st.session_state.page = "landing"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 L = LANGUAGES[st.session_state.lang]
 
-# --- 4. FUNZIONI CORE (FIXED) ---
+# --- 4. FUNZIONI CORE ---
 def make_hashes(p): return hashlib.sha256(str.encode(p)).hexdigest()
 def check_hashes(p, h): return make_hashes(p) == h
 
@@ -78,7 +81,6 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 @st.cache_data(ttl=300)
 def get_market_prices(tickers):
     try:
-        # Recupero 7gg per evitare NaN nei weekend
         df = yf.download(list(tickers), period="7d", interval="1d", group_by='ticker', progress=False)
         return df
     except: return None
@@ -101,13 +103,20 @@ def get_ai_chat_response(prompt, context, lang):
         api_key = st.secrets.get("GEMINI_API_KEY")
         if not api_key: return "API Key Error."
         genai.configure(api_key=api_key)
-        # Scanner per modelli (Fix 404)
+        
         model_list = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         selected_model = "models/gemini-1.5-flash"
         if "models/gemini-1.5-flash" not in model_list: selected_model = model_list[0]
-        
         model = genai.GenerativeModel(selected_model)
-        sys_i = f"Role: Cyber-Analyst v9.7. Data: {context}. Respond in {lang}. Analyze RSI and SMA20 trends."
+        
+        # PROMPT IA POTENZIATO PER TERMINOLOGIA FINANZIARIA NATIVA
+        sys_i = f"""
+        Role: Senior Quantitative Analyst & Cyberpunk Advisor v9.8. 
+        Context Data: {context}. 
+        INSTRUCTION: You MUST respond strictly in {lang}. 
+        Use precise, high-level financial terminology native to the {lang} language (e.g., 'ipercomprato/ipervenduto' in IT, 'overbought/oversold' in EN). 
+        Analyze the RSI and SMA20 trends deeply and provide a professional, data-driven assessment of the user's portfolio situation.
+        """
         res = model.generate_content([sys_i, prompt])
         return res.text
     except Exception as e: return f"AI Error: {str(e)}"
@@ -149,10 +158,34 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
 # --- 7. DASHBOARD OPERATIVA ---
 elif st.session_state.logged_in:
     st.sidebar.title(f"👾 Hub: {st.session_state.user_email}")
+    st.session_state.lang = st.sidebar.selectbox("🌐 Language", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
+    
     t_search = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
     t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
     
-    # Indici Live (Fix NaN)
+    # --- RIPRISTINO INPUT PORTAFOGLIO ---
+    db_p = conn.read(worksheet="Portafoglio", ttl=0) # Leggiamo prima il DB
+    
+    with st.sidebar.container(border=True):
+        st.subheader(f"💾 {L['side_save_op']}")
+        p_acq = st.sidebar.number_input(L['side_price'], min_value=0.0)
+        q_acq = st.sidebar.number_input(L['side_qty'], min_value=0.0)
+        
+        if st.sidebar.button(L['side_btn_save']):
+            nuova_op = pd.DataFrame([{
+                "Email": st.session_state.user_email, "Ticker": t_search, 
+                "Prezzo": p_acq, "Quantità": q_acq, 
+                "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())
+            }])
+            conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
+            st.sidebar.success(L['side_success'])
+            st.rerun()
+            
+    if st.sidebar.button(L['btn_logout']):
+        st.session_state.logged_in = False; st.rerun()
+    # ------------------------------------
+
+    # Indici Live
     m_data = get_market_prices(["^GSPC", "BTC-USD", "GC=F"])
     c_m = st.columns(3)
     for i, s in enumerate(["^GSPC", "BTC-USD", "GC=F"]):
@@ -163,8 +196,7 @@ elif st.session_state.logged_in:
 
     st.divider()
 
-    # Patrimonio
-    db_p = conn.read(worksheet="Portafoglio", ttl=0)
+    # Patrimonio Calcolo
     miei = db_p[db_p["Email"] == st.session_state.user_email]
     tot_inv = 0
     if not miei.empty:
@@ -218,6 +250,3 @@ elif st.session_state.logged_in:
                     res = get_ai_chat_response(inp, ctx, st.session_state.lang)
                     st.markdown(res)
                     st.session_state.msgs.append({"role": "assistant", "content": res})
-
-    if st.sidebar.button(L['btn_logout']):
-        st.session_state.logged_in = False; st.rerun()
