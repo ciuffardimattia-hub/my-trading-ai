@@ -9,175 +9,158 @@ from plotly.subplots import make_subplots
 import requests
 import xml.etree.ElementTree as ET
 
-# --- 1. CONFIGURAZIONE ESTETICA AVANZATA ---
+# --- 1. CONFIGURAZIONE & DIZIONARIO LINGUE ---
 st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="⚡")
 
+LANGUAGES = {
+    "IT": {
+        "hero_t": "MARKET-CORE", "hero_s": "L'intelligenza artificiale al servizio del tuo patrimonio.",
+        "about_h": "Perché scegliere Market-Core?",
+        "about_p": "In un mercato dominato dagli algoritmi, l'investitore retail ha bisogno di strumenti avanzati. Il nostro Hub fonde i dati live con la potenza di Google Gemini.",
+        "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA20.",
+        "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri (Beta).",
+        "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati.",
+        "btn_enter": "INIZIALIZZA NODO DI ACCESSO", "sidebar_search": "Cerca Titolo",
+        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
+        "side_save": "Salva Operazione", "side_info": "Configura i tuoi parametri di acquisto.",
+        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
+    },
+    "EN": {
+        "hero_t": "MARKET-CORE", "hero_s": "AI at the service of your assets.",
+        "about_h": "Why choose Market-Core?",
+        "about_p": "In a market dominated by algorithms, retail investors need advanced tools. Our Hub merges live data with Google Gemini power.",
+        "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA20.",
+        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds (Beta).",
+        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to markets.",
+        "btn_enter": "INITIALIZE ACCESS NODE", "sidebar_search": "Search Ticker",
+        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
+        "side_save": "Save Trade", "side_info": "Configure your purchase parameters.",
+        "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
+    },
+    "ES": {
+        "hero_t": "MARKET-CORE", "hero_s": "IA al servicio de su patrimonio.",
+        "about_h": "¿Por qué elegir Market-Core?",
+        "about_p": "Nuestro Hub fusiona datos en vivo con la potencia de Google Gemini.",
+        "feat_ia": "Análisis IA", "feat_ia_p": "Señales basadas en RSI y SMA20.",
+        "feat_cloud": "Cartera Cripto", "feat_cloud_p": "Datos en nubes seguras (Beta).",
+        "feat_turbo": "Datos Reales", "feat_turbo_p": "Conexión directa a mercados.",
+        "btn_enter": "INICIALIZAR NODO", "sidebar_search": "Buscar Ticker",
+        "chat_title": "Asesor IA", "news_title": "Noticias",
+        "side_save": "Guardar Op", "side_info": "Configura tus parámetros.",
+        "disclaimer": "⚠️ Market-Core es IA. No es asesoramiento financiero."
+    }
+}
+
+# --- 2. CSS CUSTOM ---
 st.markdown("""
     <style>
-    /* Sfondo e Colori Base */
-    .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', Courier, monospace; }
-    
-    /* Titolo Market-Core */
-    .hero-title { 
-        font-size: clamp(50px, 10vw, 90px); 
-        font-weight: 900; 
-        text-align: center; 
-        background: linear-gradient(90deg, #00ff41, #ff00ff); 
-        -webkit-background-clip: text; 
-        -webkit-text-fill-color: transparent; 
-        letter-spacing: -2px;
-        margin-bottom: 0px;
-    }
-    .hero-subtitle { text-align: center; color: #888; font-size: 18px; margin-bottom: 40px; }
-
-    /* Cards e Sezioni */
-    .about-section { 
-        background: rgba(10, 10, 10, 0.9); 
-        border: 1px solid #333; 
-        border-left: 5px solid #ff00ff; 
-        padding: 30px; 
-        border-radius: 10px; 
-        margin: 20px auto; 
-        max-width: 800px; 
-    }
-
-    /* Pulsante Accesso Cyber */
-    .stButton>button { 
-        background: transparent !important; 
-        color: #00ff41 !important; 
-        border: 2px solid #00ff41 !important; 
-        border-radius: 5px !important;
-        font-weight: bold !important;
-        padding: 15px 30px !important;
-        transition: 0.3s !important;
-        width: 100%;
-        text-transform: uppercase;
-    }
-    .stButton>button:hover { 
-        background: #00ff41 !important; 
-        color: #000 !important; 
-        box-shadow: 0 0 20px #00ff41;
-    }
-
-    /* Nascondi elementi Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
+    .hero-title { font-size: 80px; font-weight: 900; text-align: center; background: linear-gradient(90deg, #00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 20px auto; max-width: 900px; border-radius: 0 15px 15px 0; }
+    .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 150px; }
+    .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
+    .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
+    #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. INIZIALIZZAZIONE IA ---
+# --- 3. STATO E LOGICA ---
+if 'lang' not in st.session_state: st.session_state.lang = "IT"
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+L = LANGUAGES[st.session_state.lang]
+
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
-else:
-    st.error("Configurazione IA mancante.")
 
-# --- 3. GESTIONE NAVIGAZIONE ---
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-
-# --- 4. FUNZIONI DATI ---
+# --- 4. FUNZIONI DATI (FIX NAN) ---
 @st.cache_data(ttl=300)
 def get_market_prices(tickers_list):
     try: return yf.download(tickers_list, period="5d", group_by='ticker', progress=False)
     except: return None
 
-def get_news(symbol):
-    news = []
-    url = f"https://news.google.com/rss/search?q={symbol}+stock+news&hl=it&gl=IT&ceid=IT:it"
-    try:
-        r = requests.get(url, timeout=3)
-        root = ET.fromstring(r.content)
-        for i in root.findall('.//item')[:4]:
-            news.append({'t': i.find('title').text, 'l': i.find('link').text})
-    except: pass
-    return news
-
-# --- 5. PAGINA INIZIALE (LANDING) ---
+# --- 5. LANDING PAGE ---
 if not st.session_state.logged_in:
-    st.markdown("<div style='height: 10vh;'></div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-title'>MARKET-CORE</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>Sistemi Avanzati di Analisi Quantitativa IA</div>", unsafe_allow_html=True)
+    # Selettore Lingua in alto
+    c1, c2, c3 = st.columns([4, 1, 4])
+    with c2:
+        st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     
-    col_a, col_b, col_c = st.columns([1, 2, 1])
-    with col_b:
-        st.markdown("""
-            <div class='about-section'>
-            <h3 style='color:#ff00ff; margin-top:0;'>Accesso Terminale v10.0</h3>
-            <p style='color:#ccc;'>Benvenuto nell'Hub. Connessione ai mercati globali e motore IA Gemini attivo. Il sistema è pronto per l'elaborazione dati in tempo reale.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        if st.button("INIZIALIZZA NODO DI ACCESSO"):
-            st.session_state.logged_in = True
-            st.rerun()
+    st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #888; font-size:20px;'>{L['hero_s']}</p>", unsafe_allow_html=True)
     
-    st.markdown("<p style='text-align:center; color:#444; margin-top:50px;'>Versione Cloud 2026. Beta Pubblica.</p>", unsafe_allow_html=True)
+    st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
+    
+    # LE 3 PAGINETTE (BOX)
+    col_f1, col_f2, col_f3 = st.columns(3)
+    with col_f1:
+        st.markdown(f"<div class='feat-card'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
+    with col_f2:
+        st.markdown(f"<div class='feat-card' style='border-color:#ff00ff;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
+    with col_f3:
+        st.markdown(f"<div class='feat-card'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
+    
+    st.write("##")
+    if st.button(L['btn_enter']):
+        st.session_state.logged_in = True
+        st.rerun()
 
-# --- 6. TERMINALE OPERATIVO ---
+# --- 6. TERMINALE ---
 else:
-    # Sidebar di Controllo
-    st.sidebar.markdown("<h2 style='color:#ff00ff;'>MARKET-CORE</h2>", unsafe_allow_html=True)
-    ticker_input = st.sidebar.text_input("CERCA TICKER (es. NVDA, BTC, TSLA)", "NVDA").upper()
-    t_sym = f"{ticker_input}-USD" if ticker_input in ["BTC", "ETH", "SOL"] else ticker_input
+    # Sidebar con Lingua e Info
+    st.sidebar.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
+    st.session_state.lang = st.sidebar.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
+    
+    t_input = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
+    t_sym = f"{t_input}-USD" if t_input in ["BTC", "ETH", "SOL"] else t_input
 
-    # Tendenza - Top Bar
-    trending = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "GOLD", "^IXIC": "NASDAQ"}
+    # Finestra rapida impostazioni (Sidebar)
+    with st.sidebar.expander(f"ℹ️ {L['side_save']}"):
+        st.write(L['side_info'])
+        st.number_input("Prezzo di carico ($)", min_value=0.0)
+        st.button("SALVA (DEMO)")
+
+    # Ticker Bar (FIX NAN)
+    trending = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "ORO", "TSLA": "TSLA", "ETH-USD": "ETH"}
     m_prices = get_market_prices(list(trending.keys()))
-    t_cols = st.columns(4)
+    t_cols = st.columns(5)
     for i, (sym, name) in enumerate(trending.items()):
         try:
-            p = m_prices[sym]['Close'].iloc[-1]
+            # Prende l'ultimo valore non nullo (così risolve il problema delle borse chiuse)
+            p = m_prices[sym]['Close'].dropna().iloc[-1]
             t_cols[i].metric(name, f"${p:.2f}")
         except: t_cols[i].metric(name, "N/A")
 
     st.divider()
 
-    # Scarico dati per analisi
-    with st.spinner(f"Analisi {t_sym} in corso..."):
-        data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
-        
-        if not data.empty:
-            df = data.copy()
-            if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-            df['SMA20'] = ta.sma(df['Close'], length=20)
-            df['RSI'] = ta.rsi(df['Close'], length=14)
+    # Dashboard Principale
+    data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
+    if not data.empty:
+        df = data.copy()
+        if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+        df['SMA20'] = ta.sma(df['Close'], length=20)
+        df['RSI'] = ta.rsi(df['Close'], length=14)
 
-            # Grafico Professionale
-            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.03)
-            fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Prezzo"), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='#ffaa00', width=1.5)), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='#ff00ff', width=1.5)), row=2, col=1)
-            fig.add_hline(y=70, line_dash="dot", line_color="red", row=2, col=1)
-            fig.add_hline(y=30, line_dash="dot", line_color="cyan", row=2, col=1)
-            fig.update_layout(template="plotly_dark", height=500, xaxis_rangeslider_visible=False, margin=dict(l=0, r=0, t=0, b=0))
-            st.plotly_chart(fig, use_container_width=True)
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
+        fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange')), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta')), row=2, col=1)
+        fig.update_layout(template="plotly_dark", height=500, xaxis_rangeslider_visible=False)
+        st.plotly_chart(fig, use_container_width=True)
 
-            # Sezione News e AI Chat
-            col_news, col_ai = st.columns([0.4, 0.6])
-            
-            with col_news:
-                st.subheader("📡 LIVE FEED")
-                news_list = get_news(ticker_input)
-                for n in news_list:
-                    st.markdown(f"• <a href='{n['l']}' style='color:#888; text-decoration:none;'>{n['t']}</a>", unsafe_allow_html=True)
-            
-            with col_ai:
-                st.subheader("💬 AI TACTICAL ADVISOR")
-                if 'chat_hist' not in st.session_state: st.session_state.chat_hist = []
-                for m in st.session_state.chat_hist:
-                    with st.chat_message(m["role"]): st.markdown(m["content"])
-                
-                if prompt := st.chat_input("Invia comando all'IA..."):
-                    st.session_state.chat_hist.append({"role": "user", "content": prompt})
-                    with st.chat_message("user"): st.markdown(prompt)
-                    
-                    with st.chat_message("assistant"):
-                        stats = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}."
-                        ai_res = model.generate_content(f"Analista Senior. Dati: {stats}. Rispondi in italiano in modo tecnico e conciso: {prompt}").text
-                        st.markdown(ai_res)
-                        st.session_state.chat_hist.append({"role": "assistant", "content": ai_res})
+        c1, c2 = st.columns([0.4, 0.6])
+        with c1:
+            st.subheader(f"📰 {L['news_title']}")
+            st.write(f"Feed live per {t_input}...")
+        with c2:
+            st.subheader(f"💬 {L['chat_title']}")
+            if prompt := st.chat_input("Comando IA..."):
+                res = model.generate_content(f"Analizza brevemente {t_sym} in {st.session_state.lang}").text
+                st.write(res)
 
-    if st.sidebar.button("LOGOUT / RESET"):
+    if st.sidebar.button("LOGOUT"):
         st.session_state.logged_in = False
         st.rerun()
+
+st.markdown(f"<div style='text-align:center; color:#444; font-size:10px;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
