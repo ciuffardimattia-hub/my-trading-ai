@@ -39,11 +39,11 @@ LANGUAGES = {
     }
 }
 
-# --- 2. CSS ---
+# --- 2. CSS CUSTOM ---
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
-    .hero-title { font-size: 80px; font-weight: 900; text-align: center; background: linear-gradient(90deg, #00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-title { font-size: 80px; font-weight: 900; text-align: center; background: linear-gradient(90deg, #00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom:0; }
     .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 20px auto; max-width: 900px; border-radius: 0 15px 15px 0; }
     .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 160px; }
     .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
@@ -52,16 +52,21 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. LOGICA ---
+# --- 3. LOGICA CORE ---
 if 'lang' not in st.session_state: st.session_state.lang = "IT"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 L = LANGUAGES[st.session_state.lang]
 
-# Fix Gemini Model (404 Error fix)
+# IA INITIALIZATION (FIX 404)
 API_KEY = os.environ.get("GEMINI_API_KEY")
+model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel('gemini-pro') # Più stabile su Render
+    try:
+        # Tenta di usare il modello più recente, altrimenti fallback su pro
+        model = genai.GenerativeModel('gemini-1.5-flash')
+    except:
+        model = genai.GenerativeModel('gemini-pro')
 
 @st.cache_data(ttl=300)
 def get_market_prices(tickers_list):
@@ -75,7 +80,6 @@ if not st.session_state.logged_in:
     
     st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #888; font-size:20px;'>{L['hero_s']}</p>", unsafe_allow_html=True)
-    
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
     
     col_f1, col_f2, col_f3 = st.columns(3)
@@ -90,22 +94,21 @@ if not st.session_state.logged_in:
 
 # --- 5. TERMINALE OPERATIVO ---
 else:
-    # Sidebar
     st.sidebar.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
     st.session_state.lang = st.sidebar.selectbox("🌐", ["IT", "EN"], index=["IT", "EN"].index(st.session_state.lang))
-    with st.sidebar.expander(L['side_info']): st.write(L['side_desc'])
     
-    # Ticker Selection al centro (Ripristinata)
-    st.markdown(f"### 🔍 {L['main_search']}")
-    t_input = st.text_input("", "NVDA").upper()
+    # TITOLO E RICERCA AL CENTRO
+    st.markdown(f"<h3 style='text-align:center;'>🔍 {L['main_search']}</h3>", unsafe_allow_html=True)
+    t_input = st.text_input("", "NVDA", label_visibility="collapsed").upper()
     t_sym = f"{t_input}-USD" if t_input in ["BTC", "ETH", "SOL"] else t_input
 
-    # Ticker Bar (No NAN)
+    # Ticker Bar (FIX NAN)
     trending = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "GOLD", "TSLA": "TSLA", "AAPL": "APPLE"}
     m_prices = get_market_prices(list(trending.keys()))
     t_cols = st.columns(5)
     for i, (sym, name) in enumerate(trending.items()):
         try:
+            # .dropna().iloc[-1] recupera l'ultimo prezzo valido anche a borsa chiusa
             p = m_prices[sym]['Close'].dropna().iloc[-1]
             t_cols[i].metric(name, f"${p:.2f}")
         except: t_cols[i].metric(name, "N/A")
@@ -141,13 +144,14 @@ else:
                 st.session_state.msgs.append({"role": "user", "content": inp})
                 with st.chat_message("user"): st.markdown(inp)
                 with st.chat_message("assistant"):
-                    ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
-                    try:
-                        res = model.generate_content(f"Analista Senior. Dati: {ctx}. Rispondi in {st.session_state.lang} a: {inp}").text
-                        st.markdown(res)
-                        st.session_state.msgs.append({"role": "assistant", "content": res})
-                    except Exception as e:
-                        st.error(f"AI Error: {e}")
+                    if model:
+                        try:
+                            ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
+                            res = model.generate_content(f"Analista Senior. Dati: {ctx}. Rispondi in {st.session_state.lang} a: {inp}").text
+                            st.markdown(res)
+                            st.session_state.msgs.append({"role": "assistant", "content": res})
+                        except Exception as e: st.error(f"AI Error: {e}")
+                    else: st.error("AI non configurata.")
 
     if st.sidebar.button("LOGOUT"):
         st.session_state.logged_in = False
