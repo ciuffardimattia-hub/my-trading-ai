@@ -1,24 +1,54 @@
 import streamlit as st
+import google.generativeai as genai
+import os
+import json
 import yfinance as yf
-import pandas_ta as ta
 import pandas as pd
+import pandas_ta as ta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from streamlit_gsheets import GSheetsConnection
-import google.generativeai as genai
 import requests
 import xml.etree.ElementTree as ET
 import hashlib
 import time
 
+# --- HACK PER RENDER: AUTO-CREAZIONE SECRETS IN BACKGROUND ---
+os.makedirs(".streamlit", exist_ok=True)
+if not os.path.exists(".streamlit/secrets.toml"):
+    creds = os.environ.get("GOOGLE_CREDENTIALS")
+    url = os.environ.get("SPREADSHEET_URL")
+    if creds and url:
+        try:
+            creds_dict = json.loads(creds)
+            with open(".streamlit/secrets.toml", "w") as f:
+                f.write("[connections.gsheets]\n")
+                f.write(f'spreadsheet = "{url}"\n')
+                f.write("[connections.gsheets.service_account]\n")
+                for k, v in creds_dict.items():
+                    v_escaped = str(v).replace('\n', '\\n')
+                    f.write(f'{k} = "{v_escaped}"\n')
+        except Exception as e:
+            pass
+
 # --- 1. CONFIGURAZIONE & STYLE ---
 st.set_page_config(page_title="CyberTrading Hub v9.9.4", layout="wide", page_icon="⚡")
+
+# NASCONDI I LOGHI DI STREAMLIT
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 LANGUAGES = {
     "IT": {
         "hero_t": "CYBERTRADING HUB", "hero_s": "L'intelligenza artificiale al servizio del tuo patrimonio.",
         "about_h": "Perché scegliere CyberTrading Hub?",
-        "about_p": "In un mercato dominato dagli algoritmi, l'investitore retail ha bisogno di strumenti avanzati. Il nostro Hub fonde i dati live con la potenza di Google Gemini per darti un analista privato 24/7.",
+        "about_p": "In un mercato dominato dagli algoritmi, l'investitore retail ha bisogno di strumenti avanzati. Il nostro Hub fonde i dati live con la potenza dell'IA per darti un analista privato 24/7.",
         "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA20.",
         "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri.",
         "feat_turbo": "Dati in Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
@@ -27,32 +57,6 @@ LANGUAGES = {
         "side_save_op": "Salva Operazione", "side_price": "Prezzo ($)", "side_qty": "Quantità", "side_btn_save": "SALVA", "side_success": "Salvato!",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News", "auth_title": "Autenticazione Nodo",
         "disclaimer": "⚠️ Disclaimer Legale: CyberTrading Hub è uno strumento di analisi basato su IA. Non costituisce consulenza finanziaria. I mercati sono volatili. Investi a tuo rischio."
-    },
-    "EN": {
-        "hero_t": "CYBERTRADING HUB", "hero_s": "AI at the service of your assets.",
-        "about_h": "Why choose CyberTrading Hub?",
-        "about_p": "Our Hub merges live data with Google Gemini power to give you a 24/7 private analyst.",
-        "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA20.",
-        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds.",
-        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
-        "btn_enter": "ENTER TERMINAL", "btn_login": "LOGIN", "btn_reg": "REGISTER",
-        "btn_back": "← Back", "btn_logout": "LOGOUT", "sidebar_search": "Search Ticker",
-        "side_save_op": "Save Trade", "side_price": "Price ($)", "side_qty": "Quantity", "side_btn_save": "SAVE", "side_success": "Saved!",
-        "chat_title": "AI Tactical Advisor", "news_title": "News Feed", "auth_title": "Node Authentication",
-        "disclaimer": "⚠️ Legal Disclaimer: CyberTrading Hub is an AI-based analysis tool. It does not constitute financial advice. Markets are volatile. Invest at your own risk."
-    },
-    "ES": {
-        "hero_t": "CYBERTRADING HUB", "hero_s": "IA al servicio de su patrimonio.",
-        "about_h": "¿Por qué elegir CyberTrading Hub?",
-        "about_p": "Nuestro Hub fusiona datos en vivo con la potencia de Google Gemini.",
-        "feat_ia": "Análisis Táctico IA", "feat_ia_p": "Señales basadas en RSI y SMA20.",
-        "feat_cloud": "Cartera Criptografiada", "feat_cloud_p": "Datos guardados en nubes seguras.",
-        "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a mercados globales.",
-        "btn_enter": "ENTRAR", "btn_login": "CONECTAR", "btn_reg": "REGISTRAR",
-        "btn_back": "← Volver", "btn_logout": "SALIR", "sidebar_search": "Buscar Ticker",
-        "side_save_op": "Guardar Op", "side_price": "Precio ($)", "side_qty": "Cant", "side_btn_save": "GUARDAR", "side_success": "¡Guardado!",
-        "chat_title": "Asesor IA", "news_title": "Noticias", "auth_title": "Autenticación",
-        "disclaimer": "⚠️ Aviso Legal: CyberTrading Hub es una herramienta de análisis de IA. No constituye asesoramiento financiero. Los mercados son volátiles. Invierta bajo su propio riesgo."
     }
 }
 
@@ -73,10 +77,24 @@ if 'page' not in st.session_state: st.session_state.page = "landing"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 L = LANGUAGES[st.session_state.lang]
 
-# --- 3. FUNZIONI CORE ---
+# --- 3. FUNZIONI CORE E INIZIALIZZAZIONE ---
 def make_hashes(p): return hashlib.sha256(str.encode(p)).hexdigest()
 def check_hashes(p, h): return make_hashes(p) == h
-conn = st.connection("gsheets", type=GSheetsConnection)
+
+# Connessione Sicura a Google Sheets
+try:
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    db_connected = True
+except Exception as e:
+    db_connected = False
+
+API_KEY = os.environ.get("GEMINI_API_KEY")
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+else:
+    st.error("⚠️ Errore critico: GEMINI_API_KEY non trovata sul server.")
+    st.stop()
 
 @st.cache_data(ttl=300)
 def get_market_prices(tickers_list):
@@ -98,35 +116,23 @@ def get_cached_news(symbol):
     except: pass
     return news
 
-def get_ai_chat_response(prompt, context, lang):
-    try:
-        api_key = st.secrets.get("GEMINI_API_KEY")
-        if not api_key: return "API Key Error."
-        genai.configure(api_key=api_key)
-        model_list = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        selected_model = "models/gemini-1.5-flash"
-        if "models/gemini-1.5-flash" not in model_list: selected_model = model_list[0]
-        model = genai.GenerativeModel(selected_model)
-        
-        sys_i = f"Role: Senior Financial Analyst v9.9.4. Context: {context}. Respond in {lang}. Use technical financial jargon."
-        res = model.generate_content([sys_i, prompt])
-        return res.text
-    except Exception as e: return f"AI Error: {str(e)}"
-
 # --- 4. LANDING PAGE ---
 if st.session_state.page == "landing" and not st.session_state.logged_in:
-    st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #888;'>{L['hero_s']}</p>", unsafe_allow_html=True)
+    
+    if not db_connected:
+        st.warning("⚠️ Accesso Utenti in Manutenzione temporanea. Assicurati di aver impostato SPREADSHEET_URL su Render.")
+
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     c1.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
     c2.markdown(f"<div style='border:1px solid #ff00ff; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
     c3.markdown(f"<div style='border:1px solid #00ff41; padding:20px; border-radius:15px; text-align:center;'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
     st.write("##")
-    if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
     
-    # Disclaimer a fondo pagina
+    if db_connected:
+        if st.button(L['btn_enter']): st.session_state.page = "auth"; st.rerun()
     st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
 # --- 5. AUTH ---
@@ -137,26 +143,23 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
     with t1:
         e = st.text_input("Email").lower().strip()
         p = st.text_input("Password", type="password").strip()
-        
         if st.button(L['btn_login']):
             try:
                 df_u = conn.read(worksheet="Utenti", ttl=0)
                 df_u["Email_Safe"] = df_u["Email"].astype(str).str.strip().str.lower()
                 u = df_u[df_u["Email_Safe"] == e]
                 if not u.empty:
-                    db_hash = str(u["Password"].values[0]).strip()
-                    if check_hashes(p, db_hash):
+                    if check_hashes(p, str(u["Password"].values[0]).strip()):
                         st.session_state.logged_in = True
                         st.session_state.user_email = e
                         st.rerun()
                     else: st.error("Accesso negato. Password errata.")
                 else: st.error("Accesso negato. Utente non trovato.")
-            except Exception as ex: st.error(f"⚠️ Errore connessione Google Sheets: {ex}")
+            except Exception as ex: st.error(f"⚠️ Errore Database: {ex}")
 
     with t2:
         ne = st.text_input("Nuova Email").lower().strip()
         np = st.text_input("Nuova Password", type="password").strip()
-        
         if st.button(L['btn_reg']):
             try:
                 df_u = conn.read(worksheet="Utenti", ttl=0)
@@ -168,66 +171,15 @@ elif st.session_state.page == "auth" and not st.session_state.logged_in:
                     nu = pd.DataFrame([{"Email": ne, "Password": make_hashes(np)}])
                     conn.update(worksheet="Utenti", data=pd.concat([df_to_save, nu], ignore_index=True))
                     st.success("Account creato! Ora fai il login.")
-            except Exception as ex: st.error(f"⚠️ Errore creazione account: {ex}")
+            except Exception as ex: st.error(f"⚠️ Errore Database: {ex}")
 
     if st.button(L['btn_back']): st.session_state.page = "landing"; st.rerun()
-    st.markdown(f"<div class='legal-disclaimer'>{L['disclaimer']}</div>", unsafe_allow_html=True)
 
 # --- 6. DASHBOARD ---
 elif st.session_state.logged_in:
-    # Sidebar
     st.sidebar.title(f"👾 Hub: {st.session_state.user_email}")
-    st.session_state.lang = st.sidebar.selectbox("🌐", ["IT", "EN", "ES"], index=["IT", "EN", "ES"].index(st.session_state.lang))
     t_search = st.sidebar.text_input(L['sidebar_search'], "BTC").upper()
     t_sym = f"{t_search}-USD" if t_search in ["BTC", "ETH", "SOL"] else t_search
-    
-    with st.sidebar.container(border=True):
-        st.subheader(f"💾 {L['side_save_op']}")
-        p_acq = st.sidebar.number_input(L['side_price'], min_value=0.0)
-        q_acq = st.sidebar.number_input(L['side_qty'], min_value=0.0)
-        
-        if st.sidebar.button(L['side_btn_save']):
-            try:
-                db_p = conn.read(worksheet="Portafoglio", ttl=5)
-                nuova_op = pd.DataFrame([{"Email": st.session_state.user_email, "Ticker": t_search, "Prezzo": p_acq, "Quantità": q_acq, "Totale": p_acq * q_acq, "Data": str(pd.Timestamp.now().date())}])
-                conn.update(worksheet="Portafoglio", data=pd.concat([db_p, nuova_op], ignore_index=True))
-                st.sidebar.success(L['side_success'])
-                time.sleep(1)
-                st.rerun()
-            except Exception as ex:
-                st.sidebar.error(f"Errore salvataggio: {ex}")
-            
-    if st.sidebar.button(L['btn_logout']): st.session_state.logged_in = False; st.rerun()
-    
-    # Disclaimer Sidebar
-    st.sidebar.markdown(f"<div style='margin-top: 30px; font-size: 11px; color: #555;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
-
-    # --- TOP MARKET BAR ---
-    tickers_map = {"BTC-USD": "Bitcoin", "GC=F": "Gold", "^IXIC": "Nasdaq", "^GSPC": "S&P 500", "NVDA": "Nvidia", "TSLA": "Tesla"}
-    m_data = get_market_prices(list(tickers_map.keys()))
-    cols = st.columns(6)
-    
-    for i, (sym, name) in enumerate(tickers_map.items()):
-        try:
-            val = "Loading..."
-            if m_data is not None and not m_data.empty:
-                if isinstance(m_data.columns, pd.MultiIndex):
-                    if sym in m_data.columns.get_level_values(0):
-                        val = f"{m_data[sym]['Close'].dropna().iloc[-1]:.2f}"
-                else:
-                    val = f"{m_data['Close'].dropna().iloc[-1]:.2f}"
-            cols[i].metric(name, val)
-        except: cols[i].metric(name, "N/A")
-
-    st.divider()
-
-    # Calcolo Patrimonio Invisibile (Safe Mode per IA)
-    tot_inv = 0
-    try:
-        db_p = conn.read(worksheet="Portafoglio", ttl=5)
-        miei = db_p[db_p["Email"] == st.session_state.user_email]
-        if not miei.empty: tot_inv = miei["Totale"].sum()
-    except: pass 
 
     # Grafico & Chat
     data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
@@ -261,7 +213,13 @@ elif st.session_state.logged_in:
                 st.session_state.msgs.append({"role": "user", "content": inp})
                 with st.chat_message("user"): st.markdown(inp)
                 with st.chat_message("assistant"):
-                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}, Portfolio_Invested_Total {tot_inv}$"
-                    res = get_ai_chat_response(inp, ctx, st.session_state.lang)
+                    ctx = f"Ticker {t_sym}, Price {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}"
+                    sys_i = f"Role: Senior Financial Analyst. Context: {ctx}. Respond in Italian. Keep it technical."
+                    try:
+                        res = model.generate_content([sys_i, inp]).text
+                    except Exception as e:
+                        res = f"AI Error: {e}"
                     st.markdown(res)
                     st.session_state.msgs.append({"role": "assistant", "content": res})
+
+    if st.sidebar.button(L['btn_logout']): st.session_state.logged_in = False; st.rerun()
