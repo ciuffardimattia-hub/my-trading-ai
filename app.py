@@ -57,7 +57,7 @@ L = LANGUAGES[st.session_state.lang]
 
 def resolve_ticker(q):
     q = q.lower().strip()
-    m = {"bitcoin": "BTC-USD", "ethereum": "ETH-USD", "amazon": "AMZN", "apple": "AAPL", "tesla": "TSLA", "nvidia": "NVDA", "oro": "GC=F", "gold": "GC=F"}
+    m = {"bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD", "amazon": "AMZN", "apple": "AAPL", "tesla": "TSLA", "nvidia": "NVDA", "oro": "GC=F", "gold": "GC=F"}
     if q in m: return m[q]
     if len(q) <= 5: 
         if q.upper() in ["BTC", "ETH", "SOL"]: return f"{q.upper()}-USD"
@@ -68,7 +68,7 @@ def resolve_ticker(q):
 def fetch_news_rss(q):
     news = []
     try:
-        url = f"https://news.google.com/rss/search?q={q}+stock&hl=it&gl=IT&ceid=IT:it"
+        url = f"https://news.google.com/rss/search?q={q}+stock+market&hl=it&gl=IT&ceid=IT:it"
         r = requests.get(url, timeout=5)
         root = ET.fromstring(r.content)
         for i in root.findall('.//item')[:5]:
@@ -76,17 +76,27 @@ def fetch_news_rss(q):
     except: pass
     return news
 
-# --- 4. INIZIALIZZAZIONE IA (FIX 404) ---
+# --- 4. INIZIALIZZAZIONE IA (AUTO-DISCOVERY 404 FIX) ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
-    # Prova diversi modelli per evitare il 404
-    for m_name in ['gemini-1.5-flash', 'gemini-pro', 'models/gemini-pro']:
-        try:
-            model = genai.GenerativeModel(m_name)
-            break
-        except: continue
+    try:
+        # Interroga Google per i nomi esatti supportati dalla tua chiave
+        valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        target = 'gemini-1.5-flash'
+        if 'models/gemini-1.5-flash' in valid_models:
+            target = 'models/gemini-1.5-flash'
+        elif 'models/gemini-pro' in valid_models:
+            target = 'models/gemini-pro'
+        elif len(valid_models) > 0:
+            target = valid_models[0]
+            
+        model = genai.GenerativeModel(target)
+    except Exception as e:
+        # Fallback estremo se la lista fallisce
+        model = genai.GenerativeModel('models/gemini-pro')
 
 # --- 5. LANDING PAGE ---
 if not st.session_state.logged_in:
@@ -116,7 +126,7 @@ else:
     u_in = st.text_input("", "Bitcoin", label_visibility="collapsed")
     t_sym = resolve_ticker(u_in)
 
-    # Trending Bar (Fix NaN)
+    # Trending Bar
     trend = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "ORO", "TSLA": "TSLA", "^IXIC": "NASDAQ"}
     m_p = yf.download(list(trend.keys()), period="5d", group_by='ticker', progress=False)
     t_cols = st.columns(5)
@@ -145,7 +155,11 @@ else:
         c1, c2 = st.columns([0.4, 0.6])
         with c1:
             st.subheader(f"📰 {L['news_title']}")
-            for n in fetch_news_rss(u_in): st.markdown(f"• [{n['t']}]({n['l']})")
+            news_feed = fetch_news_rss(u_in)
+            if news_feed:
+                for n in news_feed: st.markdown(f"• [{n['t']}]({n['l']})")
+            else:
+                st.write("Nessuna notizia rilevante trovata.")
 
         with c2:
             st.subheader(f"💬 {L['chat_title']}")
@@ -159,14 +173,16 @@ else:
                 with st.chat_message("assistant"):
                     if model:
                         try:
-                            ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
-                            res = model.generate_content(f"Analista finanziario. Dati: {ctx}. Rispondi in {st.session_state.lang}: {inp}").text
+                            ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}, SMA20 {df['SMA20'].iloc[-1]:.1f}"
+                            prompt = f"Sei un analista finanziario. Dati di mercato attuali: {ctx}. Rispondi in {st.session_state.lang} a questa richiesta: {inp}"
+                            res = model.generate_content(prompt).text
                             st.markdown(res)
                             st.session_state.msgs.append({"role": "assistant", "content": res})
-                        except Exception as e: st.error(f"Errore: {e}")
-                    else: st.error("IA non disponibile.")
+                        except Exception as e: 
+                            st.error(f"Errore generazione: L'IA ha riscontrato un problema tecnico o di sicurezza.")
+                    else: st.error("IA non sincronizzata con il server.")
 
-    if st.sidebar.button("LOGOUT"):
+    if st.sidebar.button("LOGOUT / RESET"):
         st.session_state.logged_in = False
         st.rerun()
 
