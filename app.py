@@ -14,24 +14,24 @@ st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="
 
 LANGUAGES = {
     "IT": {
-        "hero_t": "MARKET-CORE", "hero_s": "Sistemi di Analisi Quantitativa IA.",
+        "hero_t": "MARKET-CORE", "hero_s": "Analisi Quantitativa IA in tempo reale.",
         "about_h": "Perché Market-Core?",
-        "about_p": "Il nostro Hub fonde i dati live con la potenza di Google Gemini per darti un analista privato 24/7.",
+        "about_p": "Il nostro Hub fonde i dati live con la potenza di Google Gemini per un'analisi professionale 24/7.",
         "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA20.",
         "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri (Beta).",
         "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
-        "btn_enter": "INIZIALIZZA NODO DI ACCESSO", "main_search": "INSERISCI NOME O TICKER (es. Bitcoin o NVDA)",
+        "btn_enter": "INIZIALIZZA NODO DI ACCESSO", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non è consulenza finanziaria."
+        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
     },
     "EN": {
-        "hero_t": "MARKET-CORE", "hero_s": "AI Quantitative Analysis Systems.",
+        "hero_t": "MARKET-CORE", "hero_s": "Real-time AI Quantitative Analysis.",
         "about_h": "Why Market-Core?",
-        "about_p": "Our Hub merges live data with Google Gemini to give you a 24/7 private analyst.",
+        "about_p": "Our Hub merges live data with Google Gemini for professional 24/7 analysis.",
         "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA20.",
         "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds (Beta).",
-        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to markets.",
-        "btn_enter": "INITIALIZE ACCESS NODE", "main_search": "ENTER NAME OR TICKER (e.g., Bitcoin or NVDA)",
+        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
+        "btn_enter": "INITIALIZE ACCESS NODE", "main_search": "SEARCH NAME OR TICKER (e.g. Amazon or BTC)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
         "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
     }
@@ -50,44 +50,43 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. FUNZIONI LOGICHE ---
+# --- 3. FUNZIONI CORE (VELOCIZZATE) ---
 if 'lang' not in st.session_state: st.session_state.lang = "IT"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 L = LANGUAGES[st.session_state.lang]
 
-def resolve_ticker(query):
-    query = query.lower().strip()
-    mapping = {
-        "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD", "ripple": "XRP-USD",
-        "amazon": "AMZN", "apple": "AAPL", "tesla": "TSLA", "nvidia": "NVDA", "google": "GOOGL",
-        "microsoft": "MSFT", "meta": "META", "netflix": "NFLX", "gold": "GC=F", "oro": "GC=F",
-        "nasdaq": "^IXIC", "s&p500": "^GSPC", "sp500": "^GSPC"
-    }
-    if query in mapping: return mapping[query]
-    if len(query) <= 5: # Probabile ticker
-        if query.upper() in ["BTC", "ETH", "SOL"]: return f"{query.upper()}-USD"
-        return query.upper()
-    return query.upper()
+def resolve_ticker(q):
+    q = q.lower().strip()
+    m = {"bitcoin": "BTC-USD", "ethereum": "ETH-USD", "amazon": "AMZN", "apple": "AAPL", "tesla": "TSLA", "nvidia": "NVDA", "oro": "GC=F", "gold": "GC=F"}
+    if q in m: return m[q]
+    if len(q) <= 5: 
+        if q.upper() in ["BTC", "ETH", "SOL"]: return f"{q.upper()}-USD"
+        return q.upper()
+    return q.upper()
 
 @st.cache_data(ttl=600)
-def fetch_news(query):
+def fetch_news_rss(q):
     news = []
     try:
-        url = f"https://news.google.com/rss/search?q={query}+stock+market&hl=it&gl=IT&ceid=IT:it"
+        url = f"https://news.google.com/rss/search?q={q}+stock&hl=it&gl=IT&ceid=IT:it"
         r = requests.get(url, timeout=5)
         root = ET.fromstring(r.content)
-        for item in root.findall('.//item')[:5]:
-            news.append({'t': item.find('title').text, 'l': item.find('link').text})
+        for i in root.findall('.//item')[:5]:
+            news.append({'t': i.find('title').text, 'l': i.find('link').text})
     except: pass
     return news
 
-# --- 4. INIZIALIZZAZIONE IA ---
+# --- 4. INIZIALIZZAZIONE IA (FIX 404) ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
-    try: model = genai.GenerativeModel('gemini-1.5-flash')
-    except: model = genai.GenerativeModel('gemini-pro')
+    # Prova diversi modelli per evitare il 404
+    for m_name in ['gemini-1.5-flash', 'gemini-pro', 'models/gemini-pro']:
+        try:
+            model = genai.GenerativeModel(m_name)
+            break
+        except: continue
 
 # --- 5. LANDING PAGE ---
 if not st.session_state.logged_in:
@@ -113,68 +112,61 @@ else:
     st.sidebar.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
     st.session_state.lang = st.sidebar.selectbox("🌐 ", ["IT", "EN"], index=["IT", "EN"].index(st.session_state.lang))
     
-    # RICERCA CENTRALE
     st.markdown(f"<h3 style='text-align:center;'>🔍 {L['main_search']}</h3>", unsafe_allow_html=True)
-    user_input = st.text_input("", "Bitcoin", label_visibility="collapsed")
-    t_sym = resolve_ticker(user_input)
+    u_in = st.text_input("", "Bitcoin", label_visibility="collapsed")
+    t_sym = resolve_ticker(u_in)
 
-    # Trending Bar (No NaN)
-    trending = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "ORO", "TSLA": "TSLA", "^IXIC": "NASDAQ"}
-    m_prices = yf.download(list(trending.keys()), period="5d", group_by='ticker', progress=False)
+    # Trending Bar (Fix NaN)
+    trend = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "ORO", "TSLA": "TSLA", "^IXIC": "NASDAQ"}
+    m_p = yf.download(list(trend.keys()), period="5d", group_by='ticker', progress=False)
     t_cols = st.columns(5)
-    for i, (sym, name) in enumerate(trending.items()):
+    for i, (s, n) in enumerate(trend.items()):
         try:
-            val = m_prices[sym]['Close'].dropna().iloc[-1]
-            t_cols[i].metric(name, f"${val:.2f}")
-        except: t_cols[i].metric(name, "N/A")
+            val = m_p[s]['Close'].dropna().iloc[-1]
+            t_cols[i].metric(n, f"${val:.2f}")
+        except: t_cols[i].metric(n, "N/A")
 
     st.divider()
 
-    # DATI MERCATO & GRAFICO
-    with st.spinner("Analizzando flusso dati..."):
-        data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
-        if not data.empty:
-            df = data.copy()
-            if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-            df['SMA20'] = ta.sma(df['Close'], length=20)
-            df['RSI'] = ta.rsi(df['Close'], length=14)
+    data = yf.download(t_sym, period="1y", interval="1d", auto_adjust=True, progress=False)
+    if not data.empty:
+        df = data.copy()
+        if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+        df['SMA20'] = ta.sma(df['Close'], length=20)
+        df['RSI'] = ta.rsi(df['Close'], length=14)
 
-            # Grafico Professional
-            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
-            fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange')), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta')), row=2, col=1)
-            fig.update_layout(template="plotly_dark", height=500, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0))
-            st.plotly_chart(fig, use_container_width=True)
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
+        fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange')), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='magenta')), row=2, col=1)
+        fig.update_layout(template="plotly_dark", height=500, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0))
+        st.plotly_chart(fig, use_container_width=True)
 
-            c1, c2 = st.columns([0.4, 0.6])
-            with c1:
-                st.subheader(f"📰 {L['news_title']}")
-                news_data = fetch_news(user_input)
-                if news_data:
-                    for n in news_data: st.markdown(f"• [{n['t']}]({n['l']})")
-                else: st.write("Nessuna notizia recente trovata.")
+        c1, c2 = st.columns([0.4, 0.6])
+        with c1:
+            st.subheader(f"📰 {L['news_title']}")
+            for n in fetch_news_rss(u_in): st.markdown(f"• [{n['t']}]({n['l']})")
 
-            with c2:
-                st.subheader(f"💬 {L['chat_title']}")
-                if 'msgs' not in st.session_state: st.session_state.msgs = []
-                for m in st.session_state.msgs:
-                    with st.chat_message(m["role"]): st.markdown(m["content"])
-                
-                if inp := st.chat_input("Comando IA..."):
-                    st.session_state.msgs.append({"role": "user", "content": inp})
-                    with st.chat_message("user"): st.markdown(inp)
-                    with st.chat_message("assistant"):
-                        if model:
-                            try:
-                                ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
-                                res = model.generate_content(f"Sei un analista finanziario. Dati: {ctx}. Rispondi in {st.session_state.lang}: {inp}").text
-                                st.markdown(res)
-                                st.session_state.msgs.append({"role": "assistant", "content": res})
-                            except Exception as e: st.error(f"Errore IA: {e}")
-                        else: st.error("IA non configurata (Controlla GEMINI_API_KEY su Render)")
+        with c2:
+            st.subheader(f"💬 {L['chat_title']}")
+            if 'msgs' not in st.session_state: st.session_state.msgs = []
+            for m in st.session_state.msgs:
+                with st.chat_message(m["role"]): st.markdown(m["content"])
+            
+            if inp := st.chat_input("Comando IA..."):
+                st.session_state.msgs.append({"role": "user", "content": inp})
+                with st.chat_message("user"): st.markdown(inp)
+                with st.chat_message("assistant"):
+                    if model:
+                        try:
+                            ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
+                            res = model.generate_content(f"Analista finanziario. Dati: {ctx}. Rispondi in {st.session_state.lang}: {inp}").text
+                            st.markdown(res)
+                            st.session_state.msgs.append({"role": "assistant", "content": res})
+                        except Exception as e: st.error(f"Errore: {e}")
+                    else: st.error("IA non disponibile.")
 
-    if st.sidebar.button("LOGOUT / RESET"):
+    if st.sidebar.button("LOGOUT"):
         st.session_state.logged_in = False
         st.rerun()
 
