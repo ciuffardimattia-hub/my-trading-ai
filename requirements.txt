@@ -1,8 +1,9 @@
 streamlit
+google-generativeai
 yfinance
 pandas
 pandas_ta
 plotly
-google-generativeai
 requests
-st-gsheets-connection
+gspread
+oauth2client
