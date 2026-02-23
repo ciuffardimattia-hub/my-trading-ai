@@ -191,10 +191,8 @@ elif st.session_state.page == "auth":
                     if user_found:
                         st.session_state.logged_in = True
                         st.session_state.user_email = email_in
-                        # Carica il portafoglio dell'utente dal cloud
                         if ws_portafoglio:
                             all_data = ws_portafoglio.get_all_values()
-                            # Filtra solo i dati di QUESTA email
                             st.session_state.portfolio = [r for r in all_data if len(r) >= 4 and r[0] == email_in]
                         st.session_state.page = "terminal"
                         st.rerun()
@@ -209,7 +207,6 @@ elif st.session_state.page == "auth":
             if reg_email and reg_pass:
                 if ws_utenti:
                     try:
-                        # Salviamo la password in formato criptato
                         hashed_pass = hash_password(reg_pass)
                         ws_utenti.append_row([reg_email, hashed_pass])
                         st.success("Account creato! La tua password è stata criptata con successo. Ora puoi accedere.")
@@ -234,7 +231,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
     if st.session_state.portfolio:
         st.sidebar.markdown(f"**{L['port_subtitle']}**")
         for item in st.session_state.portfolio:
-            # item: [email, ticker, price, qty, total, date]
             ticker = item[1]
             price = float(item[2])
             qty = float(item[3])
@@ -257,9 +253,9 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
             new_row = [st.session_state.user_email, p_ticker, str(p_price), str(p_qty), str(totale), data_oggi]
             try:
                 ws_portafoglio.append_row(new_row)
-                st.session_state.portfolio.append(new_row) # Aggiorna la vista
+                st.session_state.portfolio.append(new_row) 
                 st.sidebar.success("✅ Salvato!")
-                st.rerun() # Ricarica per mostrare il nuovo asset in lista
+                st.rerun() 
             except: st.sidebar.error("Errore salvataggio.")
         elif not p_ticker:
             st.sidebar.warning("Inserisci Ticker.")
@@ -365,7 +361,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                     with st.chat_message("assistant"):
                         if model:
                             try:
-                                # Prepariamo il contesto del portafoglio per l'IA
                                 port_context = "L'utente non ha asset in portafoglio."
                                 if st.session_state.portfolio:
                                     asset_list = ", ".join([f"{item[3]} quote di {item[1]} a {item[2]}$" for item in st.session_state.portfolio])
@@ -378,7 +373,9 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                                 
                                 st.markdown(res)
                                 st.session_state.msgs.append({"role": "assistant", "content": res})
-                            except Exception as e: st.error("Errore di elaborazione IA.")
+                            except Exception as e:
+                                # ECCO LA SPIA DI DEBUG! 
+                                st.error(f"Errore tecnico IA (Copia questo per il debug): {e}")
                         else: st.error("IA non sincronizzata.")
 
 st.markdown(f"<div style='text-align:center; color:#444; font-size:10px; margin-top:50px;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
