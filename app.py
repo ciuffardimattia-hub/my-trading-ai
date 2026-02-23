@@ -14,8 +14,13 @@ import json
 from datetime import datetime
 import hashlib
 
-# --- 1. CONFIGURAZIONE E ICONA ---
-st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="icona.png")
+# --- 1. CONFIGURAZIONE E FORZATURA BARRA LATERALE ---
+st.set_page_config(
+    page_title="Market-Core Terminal", 
+    layout="wide", 
+    page_icon="icona.png",
+    initial_sidebar_state="expanded" # Forza l'apertura della barra del portafoglio
+)
 
 # --- FUNZIONE CRITTOGRAFIA PASSWORD ---
 def hash_password(password):
@@ -82,6 +87,7 @@ LANGUAGES = {
 }
 
 # --- 3. CSS CUSTOM ---
+# NOTA: Rimosso 'header' dai blocchi nascosti per permettere l'apertura/chiusura menu se serve
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
@@ -91,7 +97,7 @@ st.markdown("""
     .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
     .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
     .asset-box { border: 1px solid #333; padding: 10px; margin-bottom: 5px; border-radius: 5px; background: #111; border-left: 3px solid #ff00ff;}
-    #MainMenu, footer, header {visibility: hidden;}
+    #MainMenu, footer {visibility: hidden;} 
     </style>
     """, unsafe_allow_html=True)
 
@@ -123,7 +129,7 @@ def fetch_news_rss(q):
     except: pass
     return news
 
-# --- 5. DATABASE ---
+# --- 5. DATABASE (SAFE CONNECT V2) ---
 @st.cache_resource
 def init_db():
     try:
@@ -150,17 +156,32 @@ def delete_portfolio_item(email, ticker):
         records = ws_portafoglio.get_all_values()
         for i, row in enumerate(records):
             if len(row) >= 2 and row[0] == email and row[1] == ticker:
-                ws_portafoglio.delete_rows(i + 1) # i+1 perché gspread parte da 1
+                ws_portafoglio.delete_rows(i + 1)
                 return True
     return False
 
-# --- 6. IA SINC ---
+# --- 6. IA SINC - MOTORE AUTO-RICERCA FIX ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Trova dinamicamente i modelli che Google ti permette di usare oggi
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        target_model = None
+        
+        # Cerca il migliore disponibile in ordine di preferenza
+        for m_name in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-1.0-pro', 'models/gemini-pro']:
+            if m_name in available_models:
+                target_model = m_name
+                break
+                
+        # Fallback estremo se i nomi cambiano ancora
+        if not target_model and available_models:
+            target_model = available_models[0]
+            
+        if target_model:
+            model = genai.GenerativeModel(target_model)
     except Exception as e:
         pass
 
@@ -245,7 +266,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
             for item in st.session_state.portfolio:
                 ticker, price, qty = item[1], float(item[2]), float(item[3])
                 
-                # Impaginazione: Testo a sinistra, Bottone elimina a destra
                 col_txt, col_btn = st.columns([4, 1])
                 with col_txt:
                     st.markdown(f"<div class='asset-box'><b>{ticker}</b><br>{qty} qt | ${price:.2f}</div>", unsafe_allow_html=True)
@@ -394,6 +414,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                                 st.session_state.msgs.append({"role": "assistant", "content": res})
                             except Exception as e:
                                 st.error(f"Errore tecnico IA: {e}")
-                        else: st.error("IA non sincronizzata.")
+                        else: st.error("L'IA non è al momento disponibile.")
 
 st.markdown(f"<div style='text-align:center; color:#444; font-size:10px; margin-top:50px;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
