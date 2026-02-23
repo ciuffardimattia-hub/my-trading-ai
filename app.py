@@ -31,9 +31,10 @@ LANGUAGES = {
         "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
         "btn_enter": "ACCEDI AL TERMINALE", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Il Tuo Portafoglio", 
-        "port_desc": "💡 Aggiungi i tuoi titoli qui sotto. Verranno salvati nel tuo database cloud sicuro e la nostra IA li analizzerà per darti consigli su misura in chat.",
-        "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo d'acquisto ($)", "btn_save": "➕ AGGIUNGI AL PORTAFOGLIO",
+        "port_title": "📁 IL TUO PORTAFOGLIO", 
+        "port_subtitle": "I tuoi Asset:",
+        "port_add": "➕ AGGIUNGI TITOLO",
+        "port_ticker": "Ticker (es. NVDA)", "port_qty": "Quantità", "port_price": "Prezzo Acquisto ($)", "btn_save": "SALVA ASSET",
         "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
     },
     "EN": {
@@ -44,9 +45,10 @@ LANGUAGES = {
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
         "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER (e.g. Amazon or BTC)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Your Portfolio", 
-        "port_desc": "💡 Add your assets below. They are saved in your secure cloud database and our AI uses them to give you tailored advice.",
-        "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Buy Price ($)", "btn_save": "➕ ADD TO PORTFOLIO",
+        "port_title": "📁 YOUR PORTFOLIO", 
+        "port_subtitle": "Your Assets:",
+        "port_add": "➕ ADD ASSET",
+        "port_ticker": "Ticker (e.g. NVDA)", "port_qty": "Quantity", "port_price": "Buy Price ($)", "btn_save": "SAVE ASSET",
         "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
     },
     "ES": {
@@ -57,9 +59,10 @@ LANGUAGES = {
         "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados.",
         "btn_enter": "ACCEDER AL TERMINAL", "main_search": "BUSCAR NOMBRE O TICKER (ej. Bitcoin o NVDA)",
         "chat_title": "Asesor Táctico IA", "news_title": "Noticias Data Stream",
-        "port_title": "📁 Mi Portafolio", 
-        "port_desc": "💡 Añade tus activos aquí. Se guardan de forma segura y nuestra IA los analiza para darte respuestas personalizadas.",
-        "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio de compra ($)", "btn_save": "➕ AÑADIR AL PORTAFOLIO",
+        "port_title": "📁 MI PORTAFOLIO", 
+        "port_subtitle": "Tus Activos:",
+        "port_add": "➕ AÑADIR ACTIVO",
+        "port_ticker": "Ticker (ej. NVDA)", "port_qty": "Cantidad", "port_price": "Precio Compra ($)", "btn_save": "GUARDAR",
         "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero."
     },
     "FR": {
@@ -70,9 +73,10 @@ LANGUAGES = {
         "feat_turbo": "Données en Temps Réel", "feat_turbo_p": "Connexion directe aux marchés.",
         "btn_enter": "ACCÉDER AU TERMINAL", "main_search": "RECHERCHER UN NOM OU UN TICKER",
         "chat_title": "Conseiller Tactique IA", "news_title": "Actualités Data Stream",
-        "port_title": "📁 Mon Portefeuille", 
-        "port_desc": "💡 Ajoutez vos actifs ici. Ils sont sauvegardés en toute sécurité et l'IA les utilise pour vous conseiller.",
-        "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix d'achat ($)", "btn_save": "➕ AJOUTER",
+        "port_title": "📁 MON PORTEFEUILLE", 
+        "port_subtitle": "Vos Actifs:",
+        "port_add": "➕ AJOUTER ACTIF",
+        "port_ticker": "Ticker (ex. NVDA)", "port_qty": "Quantité", "port_price": "Prix Achat ($)", "btn_save": "ENREGISTRER",
         "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier."
     }
 }
@@ -86,7 +90,7 @@ st.markdown("""
     .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 160px; }
     .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
     .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
-    .port-item { background-color: #111; padding: 10px; border-left: 3px solid #00ff41; margin-bottom: 5px; border-radius: 4px; }
+    .port-item { background-color: #111; padding: 10px; border-left: 3px solid #ff00ff; margin-bottom: 5px; border-radius: 4px; font-size: 14px; }
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -190,6 +194,7 @@ elif st.session_state.page == "auth":
                         # Carica il portafoglio dell'utente dal cloud
                         if ws_portafoglio:
                             all_data = ws_portafoglio.get_all_values()
+                            # Filtra solo i dati di QUESTA email
                             st.session_state.portfolio = [r for r in all_data if len(r) >= 4 and r[0] == email_in]
                         st.session_state.page = "terminal"
                         st.rerun()
@@ -218,42 +223,46 @@ elif st.session_state.page == "auth":
 
 elif st.session_state.page == "terminal" and st.session_state.logged_in:
     
-    # --- SIDEBAR: PORTAFOGLIO PERSONALE E IA ---
+    # --- SIDEBAR SINISTRA: PORTAFOGLIO SEMPRE VISIBILE ---
     st.sidebar.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
     st.session_state.lang = st.sidebar.selectbox("🌐 ", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
     
     st.sidebar.divider()
     st.sidebar.markdown(f"### {L['port_title']}")
-    st.sidebar.info(L['port_desc'])
     
-    # Visualizza Asset Posseduti
+    # 1. LISTA TITOLI POSSEDUTI
     if st.session_state.portfolio:
+        st.sidebar.markdown(f"**{L['port_subtitle']}**")
         for item in st.session_state.portfolio:
-            ticker, price, qty = item[1], float(item[2]), float(item[3])
-            st.sidebar.markdown(f"<div class='port-item'><b>{ticker}</b><br>{qty} quote | Avg: ${price:.2f}</div>", unsafe_allow_html=True)
+            # item: [email, ticker, price, qty, total, date]
+            ticker = item[1]
+            price = float(item[2])
+            qty = float(item[3])
+            st.sidebar.markdown(f"<div class='port-item'><b>{ticker}</b><br>{qty} quote @ ${price:.2f}</div>", unsafe_allow_html=True)
     else:
-        st.sidebar.write("Nessun asset in portafoglio.")
+        st.sidebar.info("Il tuo portafoglio è vuoto.")
     
     st.sidebar.write("---")
     
-    # Form per Aggiungere
-    with st.sidebar.expander(L['btn_save']):
-        p_ticker = st.text_input(L['port_ticker']).upper()
-        p_qty = st.number_input(L['port_qty'], min_value=0.01, step=0.01)
-        p_price = st.number_input(L['port_price'], min_value=0.01, step=0.01)
-        
-        if st.button("CONFERMA"):
-            if p_ticker and ws_portafoglio:
-                totale = p_qty * p_price
-                data_oggi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                new_row = [st.session_state.user_email, p_ticker, str(p_price), str(p_qty), str(totale), data_oggi]
-                try:
-                    ws_portafoglio.append_row(new_row)
-                    st.session_state.portfolio.append(new_row) # Aggiorna la vista istantaneamente
-                    st.rerun()
-                except: st.error("Errore di salvataggio.")
-            elif not p_ticker:
-                st.warning("Inserisci il Ticker.")
+    # 2. MODULO DI INSERIMENTO (SEMPRE APERTO)
+    st.sidebar.markdown(f"**{L['port_add']}**")
+    p_ticker = st.sidebar.text_input(L['port_ticker'], key="pt_in").upper()
+    p_qty = st.sidebar.number_input(L['port_qty'], min_value=0.01, step=0.01, key="pq_in")
+    p_price = st.sidebar.number_input(L['port_price'], min_value=0.01, step=0.01, key="pp_in")
+    
+    if st.sidebar.button(L['btn_save']):
+        if p_ticker and ws_portafoglio:
+            totale = p_qty * p_price
+            data_oggi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            new_row = [st.session_state.user_email, p_ticker, str(p_price), str(p_qty), str(totale), data_oggi]
+            try:
+                ws_portafoglio.append_row(new_row)
+                st.session_state.portfolio.append(new_row) # Aggiorna la vista
+                st.sidebar.success("✅ Salvato!")
+                st.rerun() # Ricarica per mostrare il nuovo asset in lista
+            except: st.sidebar.error("Errore salvataggio.")
+        elif not p_ticker:
+            st.sidebar.warning("Inserisci Ticker.")
 
     st.sidebar.divider()
     if st.sidebar.button("LOGOUT"):
