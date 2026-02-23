@@ -12,11 +12,16 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
 from datetime import datetime
+import hashlib
 
 # --- 1. CONFIGURAZIONE E ICONA ---
 st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="icona.png")
 
-# --- 2. LINGUE ESPANSE (IT, EN, ES, FR) CON LE 3 CARDS RESTAURATE ---
+# --- FUNZIONE CRITTOGRAFIA PASSWORD ---
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# --- 2. LINGUE ESPANSE ---
 LANGUAGES = {
     "IT": {
         "hero_t": "MARKET-CORE", "hero_s": "Analisi Quantitativa IA in tempo reale.",
@@ -26,8 +31,9 @@ LANGUAGES = {
         "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
         "btn_enter": "ACCEDI AL TERMINALE", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Gestione Portafoglio", "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo ($)", "btn_save": "SALVA IN PORTAFOGLIO",
-        "tt_ticker": "Simbolo (es. AAPL)", "tt_qty": "Quante quote?", "tt_price": "Prezzo medio", "tt_save": "Salva i dati nel tuo cloud protetto.",
+        "port_title": "📁 Il Tuo Portafoglio", 
+        "port_desc": "💡 Aggiungi i tuoi titoli qui sotto. Verranno salvati nel tuo database cloud sicuro e la nostra IA li analizzerà per darti consigli su misura in chat.",
+        "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo d'acquisto ($)", "btn_save": "➕ AGGIUNGI AL PORTAFOGLIO",
         "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
     },
     "EN": {
@@ -38,8 +44,9 @@ LANGUAGES = {
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
         "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER (e.g. Amazon or BTC)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Portfolio Management", "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Price ($)", "btn_save": "SAVE TO PORTFOLIO",
-        "tt_ticker": "Symbol (e.g. AAPL)", "tt_qty": "How many shares?", "tt_price": "Average buy price", "tt_save": "Save data to your secure cloud.",
+        "port_title": "📁 Your Portfolio", 
+        "port_desc": "💡 Add your assets below. They are saved in your secure cloud database and our AI uses them to give you tailored advice.",
+        "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Buy Price ($)", "btn_save": "➕ ADD TO PORTFOLIO",
         "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
     },
     "ES": {
@@ -50,8 +57,9 @@ LANGUAGES = {
         "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados.",
         "btn_enter": "ACCEDER AL TERMINAL", "main_search": "BUSCAR NOMBRE O TICKER (ej. Bitcoin o NVDA)",
         "chat_title": "Asesor Táctico IA", "news_title": "Noticias Data Stream",
-        "port_title": "📁 Mi Portafolio", "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio ($)", "btn_save": "GUARDAR EN PORTAFOLIO",
-        "tt_ticker": "Símbolo (ej. AAPL)", "tt_qty": "¿Cuántas acciones?", "tt_price": "Precio medio", "tt_save": "Guardar en la nube.",
+        "port_title": "📁 Mi Portafolio", 
+        "port_desc": "💡 Añade tus activos aquí. Se guardan de forma segura y nuestra IA los analiza para darte respuestas personalizadas.",
+        "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio de compra ($)", "btn_save": "➕ AÑADIR AL PORTAFOLIO",
         "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero."
     },
     "FR": {
@@ -62,13 +70,14 @@ LANGUAGES = {
         "feat_turbo": "Données en Temps Réel", "feat_turbo_p": "Connexion directe aux marchés.",
         "btn_enter": "ACCÉDER AU TERMINAL", "main_search": "RECHERCHER UN NOM OU UN TICKER",
         "chat_title": "Conseiller Tactique IA", "news_title": "Actualités Data Stream",
-        "port_title": "📁 Mon Portefeuille", "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix ($)", "btn_save": "ENREGISTRER",
-        "tt_ticker": "Symbole (ex. AAPL)", "tt_qty": "Combien d'actions?", "tt_price": "Prix moyen", "tt_save": "Sauvegarder sur le cloud.",
+        "port_title": "📁 Mon Portefeuille", 
+        "port_desc": "💡 Ajoutez vos actifs ici. Ils sont sauvegardés en toute sécurité et l'IA les utilise pour vous conseiller.",
+        "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix d'achat ($)", "btn_save": "➕ AJOUTER",
         "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier."
     }
 }
 
-# --- 3. CSS CUSTOM CON CARDS RESTAURATE ---
+# --- 3. CSS CUSTOM ---
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
@@ -77,15 +86,17 @@ st.markdown("""
     .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 160px; }
     .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
     .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
+    .port-item { background-color: #111; padding: 10px; border-left: 3px solid #00ff41; margin-bottom: 5px; border-radius: 4px; }
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. GESTIONE STATO E FUNZIONI DI BASE ---
+# --- 4. GESTIONE STATO ---
 if 'lang' not in st.session_state: st.session_state.lang = "IT"
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'page' not in st.session_state: st.session_state.page = "landing"
 if 'user_email' not in st.session_state: st.session_state.user_email = ""
+if 'portfolio' not in st.session_state: st.session_state.portfolio = []
 L = LANGUAGES[st.session_state.lang]
 
 def resolve_ticker(q):
@@ -124,23 +135,19 @@ def init_db():
 
 ws_utenti, ws_portafoglio = init_db()
 
-# --- 6. IA: AUTO-DISCOVERY ---
+# --- 6. IA SINC ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
     try:
         valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        target = 'gemini-1.5-flash'
-        if 'models/gemini-1.5-flash' in valid_models: target = 'models/gemini-1.5-flash'
-        elif 'models/gemini-pro' in valid_models: target = 'models/gemini-pro'
-        elif len(valid_models) > 0: target = valid_models[0]
+        target = 'gemini-1.5-flash' if 'models/gemini-1.5-flash' in valid_models else 'models/gemini-pro'
         model = genai.GenerativeModel(target)
     except: model = genai.GenerativeModel('models/gemini-pro')
 
-# --- 7. APPLICAZIONE (PAGINE) ---
+# --- 7. APPLICAZIONE ---
 
-# --- 7A. LANDING PAGE ---
 if st.session_state.page == "landing":
     c1, c2, c3 = st.columns([4, 1, 4])
     with c2: st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
@@ -149,18 +156,16 @@ if st.session_state.page == "landing":
     st.markdown(f"<p style='text-align: center; color: #888; font-size:20px;'>{L['hero_s']}</p>", unsafe_allow_html=True)
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
     
-    # LE 3 CARDS RESTAURATE
     col_f1, col_f2, col_f3 = st.columns(3)
     col_f1.markdown(f"<div class='feat-card'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
     col_f2.markdown(f"<div class='feat-card' style='border-color:#ff00ff;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
     col_f3.markdown(f"<div class='feat-card'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
     
     st.write("##")
-    if st.button(L['btn_enter'], help="Clicca per accedere al sistema protetto"):
+    if st.button(L['btn_enter']):
         st.session_state.page = "auth"
         st.rerun()
 
-# --- 7B. AUTHENTICATION PAGE ---
 elif st.session_state.page == "auth":
     st.markdown("<h2 style='text-align: center; color: #ff00ff;'>Autenticazione Nodo</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs(["Accedi", "Registrati"])
@@ -170,11 +175,27 @@ elif st.session_state.page == "auth":
         pass_in = st.text_input("Password", type="password", key="login_pass")
         if st.button("ENTRA NEL TERMINALE"):
             if email_in and pass_in:
-                st.session_state.logged_in = True
-                st.session_state.user_email = email_in
-                st.session_state.page = "terminal"
-                st.rerun()
-            else: st.error("Inserisci le credenziali.")
+                if ws_utenti:
+                    users = ws_utenti.get_all_values()
+                    hashed_input = hash_password(pass_in)
+                    user_found = False
+                    for row in users:
+                        if len(row) >= 2 and row[0] == email_in and row[1] == hashed_input:
+                            user_found = True
+                            break
+                    
+                    if user_found:
+                        st.session_state.logged_in = True
+                        st.session_state.user_email = email_in
+                        # Carica il portafoglio dell'utente dal cloud
+                        if ws_portafoglio:
+                            all_data = ws_portafoglio.get_all_values()
+                            st.session_state.portfolio = [r for r in all_data if len(r) >= 4 and r[0] == email_in]
+                        st.session_state.page = "terminal"
+                        st.rerun()
+                    else: st.error("Email o password errati.")
+                else: st.error("Errore di connessione al Server.")
+            else: st.warning("Inserisci le credenziali.")
 
     with t2:
         reg_email = st.text_input("Nuova Email", key="reg_mail")
@@ -183,8 +204,10 @@ elif st.session_state.page == "auth":
             if reg_email and reg_pass:
                 if ws_utenti:
                     try:
-                        ws_utenti.append_row([reg_email, reg_pass])
-                        st.success("Account creato! Ora puoi accedere.")
+                        # Salviamo la password in formato criptato
+                        hashed_pass = hash_password(reg_pass)
+                        ws_utenti.append_row([reg_email, hashed_pass])
+                        st.success("Account creato! La tua password è stata criptata con successo. Ora puoi accedere.")
                     except: st.error("Errore di salvataggio Database.")
                 else: st.error("Errore di connessione Server.")
             else: st.warning("Compila tutti i campi.")
@@ -193,42 +216,58 @@ elif st.session_state.page == "auth":
         st.session_state.page = "landing"
         st.rerun()
 
-# --- 7C. TERMINALE OPERATIVO ---
 elif st.session_state.page == "terminal" and st.session_state.logged_in:
-    # Sidebar - Lingua e Portafoglio
+    
+    # --- SIDEBAR: PORTAFOGLIO PERSONALE E IA ---
     st.sidebar.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
     st.session_state.lang = st.sidebar.selectbox("🌐 ", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
     
     st.sidebar.divider()
     st.sidebar.markdown(f"### {L['port_title']}")
-    p_ticker = st.sidebar.text_input(L['port_ticker'], help=L['tt_ticker']).upper()
-    p_qty = st.sidebar.number_input(L['port_qty'], min_value=0.01, step=0.01, help=L['tt_qty'])
-    p_price = st.sidebar.number_input(L['port_price'], min_value=0.01, step=0.01, help=L['tt_price'])
+    st.sidebar.info(L['port_desc'])
     
-    if st.sidebar.button(L['btn_save'], help=L['tt_save']):
-        if p_ticker and ws_portafoglio:
-            totale = p_qty * p_price
-            data_oggi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            try:
-                ws_portafoglio.append_row([st.session_state.user_email, p_ticker, p_price, p_qty, totale, data_oggi])
-                st.sidebar.success("Asset salvato!")
-            except: st.sidebar.error("Errore GSheets.")
-        elif not p_ticker:
-            st.sidebar.warning("Inserisci il Ticker.")
+    # Visualizza Asset Posseduti
+    if st.session_state.portfolio:
+        for item in st.session_state.portfolio:
+            ticker, price, qty = item[1], float(item[2]), float(item[3])
+            st.sidebar.markdown(f"<div class='port-item'><b>{ticker}</b><br>{qty} quote | Avg: ${price:.2f}</div>", unsafe_allow_html=True)
+    else:
+        st.sidebar.write("Nessun asset in portafoglio.")
+    
+    st.sidebar.write("---")
+    
+    # Form per Aggiungere
+    with st.sidebar.expander(L['btn_save']):
+        p_ticker = st.text_input(L['port_ticker']).upper()
+        p_qty = st.number_input(L['port_qty'], min_value=0.01, step=0.01)
+        p_price = st.number_input(L['port_price'], min_value=0.01, step=0.01)
+        
+        if st.button("CONFERMA"):
+            if p_ticker and ws_portafoglio:
+                totale = p_qty * p_price
+                data_oggi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                new_row = [st.session_state.user_email, p_ticker, str(p_price), str(p_qty), str(totale), data_oggi]
+                try:
+                    ws_portafoglio.append_row(new_row)
+                    st.session_state.portfolio.append(new_row) # Aggiorna la vista istantaneamente
+                    st.rerun()
+                except: st.error("Errore di salvataggio.")
+            elif not p_ticker:
+                st.warning("Inserisci il Ticker.")
 
     st.sidebar.divider()
     if st.sidebar.button("LOGOUT"):
         st.session_state.logged_in = False
         st.session_state.user_email = ""
+        st.session_state.portfolio = []
         st.session_state.page = "landing"
         st.rerun()
 
-    # Main Dashboard - Ricerca
+    # --- DASHBOARD PRINCIPALE ---
     st.markdown(f"<h3 style='text-align:center;'>🔍 {L['main_search']}</h3>", unsafe_allow_html=True)
-    u_in = st.text_input("", "Bitcoin", label_visibility="collapsed", help="Digita un titolo (es. NVIDIA) e premi Invio.")
+    u_in = st.text_input("", "Bitcoin", label_visibility="collapsed")
     t_sym = resolve_ticker(u_in)
 
-    # Trending
     trend = {"BTC-USD": "BTC", "NVDA": "NVDA", "GC=F": "ORO", "TSLA": "TSLA", "^IXIC": "NASDAQ"}
     m_p = yf.download(list(trend.keys()), period="5d", group_by='ticker', progress=False)
     t_cols = st.columns(5)
@@ -240,7 +279,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
 
     st.divider()
 
-    # --- PANNELLO DI CONTROLLO GRAFICO (TRADINGVIEW STYLE) ---
     st.markdown("### 📊 Impostazioni Grafico")
     g_col1, g_col2, g_col3 = st.columns(3)
     
@@ -249,15 +287,10 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
     with g_col2:
         stile_grafico = st.selectbox("📈 Stile", ["Candele", "Linea"])
     with g_col3:
-        indicatori = st.multiselect(
-            "⚙️ Indicatori", 
-            ["SMA 20", "SMA 50", "Bande di Bollinger", "MACD"], 
-            default=["SMA 20"]
-        )
+        indicatori = st.multiselect("⚙️ Indicatori", ["SMA 20", "SMA 50", "Bande di Bollinger", "MACD"], default=["SMA 20"])
 
     st.write("---")
 
-    # --- DATI E GRAFICO DINAMICO ---
     with st.spinner("Analisi dati in corso..."):
         data = yf.download(t_sym, period=periodo, interval="1d", auto_adjust=True, progress=False)
         
@@ -303,7 +336,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
             fig.update_layout(template="plotly_dark", height=550, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig, use_container_width=True)
 
-            # --- NEWS E AI CHAT (FIXATA) ---
             c1, c2 = st.columns([0.4, 0.6])
             with c1:
                 st.subheader(f"📰 {L['news_title']}")
@@ -318,15 +350,23 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                 for m in st.session_state.msgs:
                     with st.chat_message(m["role"]): st.markdown(m["content"])
                 
-                # QUI HO RIMOSSO IL 'help' CHE CAUSAVA IL CRASH
-                if inp := st.chat_input("Comando IA..."):
+                if inp := st.chat_input("Chiedimi un'analisi..."):
                     st.session_state.msgs.append({"role": "user", "content": inp})
                     with st.chat_message("user"): st.markdown(inp)
                     with st.chat_message("assistant"):
                         if model:
                             try:
-                                ctx = f"Asset {t_sym}, Prezzo {df['Close'].iloc[-1]:.2f}, RSI {df['RSI'].iloc[-1]:.1f}"
-                                res = model.generate_content(f"Analista finanziario. Dati tecnici attuali: {ctx}. Rispondi in modo professionale in {st.session_state.lang}: {inp}").text
+                                # Prepariamo il contesto del portafoglio per l'IA
+                                port_context = "L'utente non ha asset in portafoglio."
+                                if st.session_state.portfolio:
+                                    asset_list = ", ".join([f"{item[3]} quote di {item[1]} a {item[2]}$" for item in st.session_state.portfolio])
+                                    port_context = f"Portafoglio attuale dell'utente: {asset_list}."
+
+                                ctx = f"Asset cercato: {t_sym}, Prezzo: {df['Close'].iloc[-1]:.2f}, RSI: {df['RSI'].iloc[-1]:.1f}. {port_context}"
+                                
+                                prompt = f"Sei un analista finanziario. Dati di mercato attuali: {ctx}. L'utente chiede: {inp}. Rispondi in modo professionale in lingua {st.session_state.lang}, tenendo conto del suo portafoglio se pertinente alla domanda."
+                                res = model.generate_content(prompt).text
+                                
                                 st.markdown(res)
                                 st.session_state.msgs.append({"role": "assistant", "content": res})
                             except Exception as e: st.error("Errore di elaborazione IA.")
