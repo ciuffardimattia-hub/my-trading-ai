@@ -16,52 +16,65 @@ from datetime import datetime
 # --- 1. CONFIGURAZIONE E ICONA ---
 st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="icona.png")
 
-# --- 2. LINGUE ESPANSE (IT, EN, ES, FR) CON DISCLAIMER FIXATO ---
+# --- 2. LINGUE ESPANSE (IT, EN, ES, FR) CON LE 3 CARDS RESTAURATE ---
 LANGUAGES = {
     "IT": {
         "hero_t": "MARKET-CORE", "hero_s": "Analisi Quantitativa IA in tempo reale.",
         "about_h": "Perché Market-Core?", "about_p": "Il nostro Hub fonde i dati live con la potenza di Google Gemini per un'analisi professionale 24/7.",
+        "feat_ia": "Analisi Tattica IA", "feat_ia_p": "Segnali basati su RSI e SMA.",
+        "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri.",
+        "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
         "btn_enter": "ACCEDI AL TERMINALE", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Gestione Portafoglio", "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo d'Acquisto ($)", "btn_save": "SALVA IN PORTAFOGLIO",
-        "tt_ticker": "Inserisci il simbolo (es. AAPL)", "tt_qty": "Quante quote possiedi?", "tt_price": "Prezzo medio", "tt_save": "Salva i dati nel tuo cloud protetto.",
+        "port_title": "📁 Gestione Portafoglio", "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo ($)", "btn_save": "SALVA IN PORTAFOGLIO",
+        "tt_ticker": "Simbolo (es. AAPL)", "tt_qty": "Quante quote?", "tt_price": "Prezzo medio", "tt_save": "Salva i dati nel tuo cloud protetto.",
         "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
     },
     "EN": {
         "hero_t": "MARKET-CORE", "hero_s": "Real-time AI Quantitative Analysis.",
         "about_h": "Why Market-Core?", "about_p": "Our Hub merges live data with Google Gemini for professional 24/7 analysis.",
+        "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA.",
+        "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds.",
+        "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
         "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER (e.g. Amazon or BTC)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
-        "port_title": "📁 Portfolio Management", "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Buy Price ($)", "btn_save": "SAVE TO PORTFOLIO",
-        "tt_ticker": "Enter symbol (e.g. AAPL)", "tt_qty": "How many shares?", "tt_price": "Average buy price", "tt_save": "Save data to your secure cloud.",
+        "port_title": "📁 Portfolio Management", "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Price ($)", "btn_save": "SAVE TO PORTFOLIO",
+        "tt_ticker": "Symbol (e.g. AAPL)", "tt_qty": "How many shares?", "tt_price": "Average buy price", "tt_save": "Save data to your secure cloud.",
         "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
     },
     "ES": {
         "hero_t": "MARKET-CORE", "hero_s": "Análisis Cuantitativo IA en tiempo real.",
         "about_h": "¿Por qué Market-Core?", "about_p": "Nuestro Hub fusiona datos en vivo con la potencia de Google Gemini para un análisis profesional 24/7.",
+        "feat_ia": "Análisis Táctico IA", "feat_ia_p": "Señales basadas en RSI y SMA.",
+        "feat_cloud": "Portafolio Cifrado", "feat_cloud_p": "Datos en la nube segura.",
+        "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados.",
         "btn_enter": "ACCEDER AL TERMINAL", "main_search": "BUSCAR NOMBRE O TICKER (ej. Bitcoin o NVDA)",
         "chat_title": "Asesor Táctico IA", "news_title": "Noticias Data Stream",
-        "port_title": "📁 Mi Portafolio", "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio de Compra ($)", "btn_save": "GUARDAR EN PORTAFOLIO",
+        "port_title": "📁 Mi Portafolio", "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio ($)", "btn_save": "GUARDAR EN PORTAFOLIO",
         "tt_ticker": "Símbolo (ej. AAPL)", "tt_qty": "¿Cuántas acciones?", "tt_price": "Precio medio", "tt_save": "Guardar en la nube.",
         "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero."
     },
     "FR": {
         "hero_t": "MARKET-CORE", "hero_s": "Analyse Quantitative IA en temps réel.",
-        "about_h": "Pourquoi Market-Core?", "about_p": "Notre Hub fusionne les données en direct avec la puissance de Google Gemini pour une analyse 24/7.",
+        "about_h": "Pourquoi Market-Core?", "about_p": "Notre Hub fusionne les données avec la puissance de Google Gemini pour une analyse 24/7.",
+        "feat_ia": "Analyse Tactique IA", "feat_ia_p": "Signaux basés sur RSI et SMA.",
+        "feat_cloud": "Portefeuille Crypté", "feat_cloud_p": "Données sur le cloud sécurisé.",
+        "feat_turbo": "Données en Temps Réel", "feat_turbo_p": "Connexion directe aux marchés.",
         "btn_enter": "ACCÉDER AU TERMINAL", "main_search": "RECHERCHER UN NOM OU UN TICKER",
         "chat_title": "Conseiller Tactique IA", "news_title": "Actualités Data Stream",
-        "port_title": "📁 Mon Portefeuille", "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix d'Achat ($)", "btn_save": "ENREGISTRER",
+        "port_title": "📁 Mon Portefeuille", "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix ($)", "btn_save": "ENREGISTRER",
         "tt_ticker": "Symbole (ex. AAPL)", "tt_qty": "Combien d'actions?", "tt_price": "Prix moyen", "tt_save": "Sauvegarder sur le cloud.",
         "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier."
     }
 }
 
-# --- 3. CSS CUSTOM ---
+# --- 3. CSS CUSTOM CON CARDS RESTAURATE ---
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
     .hero-title { font-size: clamp(50px, 8vw, 80px); font-weight: 900; text-align: center; background: linear-gradient(90deg, #00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom:0; }
     .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 20px auto; max-width: 900px; border-radius: 0 15px 15px 0; }
+    .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 160px; }
     .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
     .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
     #MainMenu, footer, header {visibility: hidden;}
@@ -111,7 +124,7 @@ def init_db():
 
 ws_utenti, ws_portafoglio = init_db()
 
-# --- 6. IA: AUTO-DISCOVERY FIX ---
+# --- 6. IA: AUTO-DISCOVERY ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
@@ -135,6 +148,12 @@ if st.session_state.page == "landing":
     st.markdown(f"<div class='hero-title'>{L['hero_t']}</div>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #888; font-size:20px;'>{L['hero_s']}</p>", unsafe_allow_html=True)
     st.markdown(f"<div class='about-section'><h2>{L['about_h']}</h2><p>{L['about_p']}</p></div>", unsafe_allow_html=True)
+    
+    # LE 3 CARDS RESTAURATE
+    col_f1, col_f2, col_f3 = st.columns(3)
+    col_f1.markdown(f"<div class='feat-card'><h3>{L['feat_ia']}</h3><p>{L['feat_ia_p']}</p></div>", unsafe_allow_html=True)
+    col_f2.markdown(f"<div class='feat-card' style='border-color:#ff00ff;'><h3>{L['feat_cloud']}</h3><p>{L['feat_cloud_p']}</p></div>", unsafe_allow_html=True)
+    col_f3.markdown(f"<div class='feat-card'><h3>{L['feat_turbo']}</h3><p>{L['feat_turbo_p']}</p></div>", unsafe_allow_html=True)
     
     st.write("##")
     if st.button(L['btn_enter'], help="Clicca per accedere al sistema protetto"):
@@ -284,7 +303,7 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
             fig.update_layout(template="plotly_dark", height=550, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig, use_container_width=True)
 
-            # --- NEWS E AI CHAT ---
+            # --- NEWS E AI CHAT (FIXATA) ---
             c1, c2 = st.columns([0.4, 0.6])
             with c1:
                 st.subheader(f"📰 {L['news_title']}")
@@ -299,7 +318,8 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                 for m in st.session_state.msgs:
                     with st.chat_message(m["role"]): st.markdown(m["content"])
                 
-                if inp := st.chat_input("Comando IA...", help="Chiedi analisi tecnica, previsioni o spiegazioni sugli indicatori."):
+                # QUI HO RIMOSSO IL 'help' CHE CAUSAVA IL CRASH
+                if inp := st.chat_input("Comando IA..."):
                     st.session_state.msgs.append({"role": "user", "content": inp})
                     with st.chat_message("user"): st.markdown(inp)
                     with st.chat_message("assistant"):
