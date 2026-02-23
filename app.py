@@ -139,16 +139,16 @@ def init_db():
 
 ws_utenti, ws_portafoglio = init_db()
 
-# --- 6. IA SINC ---
+# --- 6. IA SINC FIXATA ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
     try:
-        valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        target = 'gemini-1.5-flash' if 'models/gemini-1.5-flash' in valid_models else 'models/gemini-pro'
-        model = genai.GenerativeModel(target)
-    except: model = genai.GenerativeModel('models/gemini-pro')
+        # Puntiamo direttamente al modello funzionante e veloce
+        model = genai.GenerativeModel('gemini-1.5-flash')
+    except Exception as e:
+        pass
 
 # --- 7. APPLICAZIONE ---
 
@@ -191,6 +191,7 @@ elif st.session_state.page == "auth":
                     if user_found:
                         st.session_state.logged_in = True
                         st.session_state.user_email = email_in
+                        # Carica il portafoglio
                         if ws_portafoglio:
                             all_data = ws_portafoglio.get_all_values()
                             st.session_state.portfolio = [r for r in all_data if len(r) >= 4 and r[0] == email_in]
@@ -209,7 +210,7 @@ elif st.session_state.page == "auth":
                     try:
                         hashed_pass = hash_password(reg_pass)
                         ws_utenti.append_row([reg_email, hashed_pass])
-                        st.success("Account creato! La tua password è stata criptata con successo. Ora puoi accedere.")
+                        st.success("Account creato! La tua password è stata criptata. Ora puoi accedere.")
                     except: st.error("Errore di salvataggio Database.")
                 else: st.error("Errore di connessione Server.")
             else: st.warning("Compila tutti i campi.")
@@ -269,6 +270,10 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
         st.rerun()
 
     # --- DASHBOARD PRINCIPALE ---
+    
+    # AVVISO PER GLI UTENTI MOBILE (visibile solo nella main dashboard)
+    st.markdown("<div style='text-align:center; color:#888; font-size:12px; margin-bottom:10px;'>📱 Da smartphone, apri il menu in alto a sinistra (>) per accedere al tuo Portafoglio.</div>", unsafe_allow_html=True)
+
     st.markdown(f"<h3 style='text-align:center;'>🔍 {L['main_search']}</h3>", unsafe_allow_html=True)
     u_in = st.text_input("", "Bitcoin", label_visibility="collapsed")
     t_sym = resolve_ticker(u_in)
@@ -374,8 +379,7 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                                 st.markdown(res)
                                 st.session_state.msgs.append({"role": "assistant", "content": res})
                             except Exception as e:
-                                # ECCO LA SPIA DI DEBUG! 
-                                st.error(f"Errore tecnico IA (Copia questo per il debug): {e}")
+                                st.error(f"Errore tecnico IA: {e}")
                         else: st.error("IA non sincronizzata.")
 
 st.markdown(f"<div style='text-align:center; color:#444; font-size:10px; margin-top:50px;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
