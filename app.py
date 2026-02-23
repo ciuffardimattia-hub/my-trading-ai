@@ -16,7 +16,7 @@ from datetime import datetime
 # --- 1. CONFIGURAZIONE E ICONA ---
 st.set_page_config(page_title="Market-Core Terminal", layout="wide", page_icon="icona.png")
 
-# --- 2. LINGUE ESPANSE (IT, EN, ES, FR) ---
+# --- 2. LINGUE ESPANSE (IT, EN, ES, FR) CON DISCLAIMER FIXATO ---
 LANGUAGES = {
     "IT": {
         "hero_t": "MARKET-CORE", "hero_s": "Analisi Quantitativa IA in tempo reale.",
@@ -24,7 +24,8 @@ LANGUAGES = {
         "btn_enter": "ACCEDI AL TERMINALE", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
         "port_title": "📁 Gestione Portafoglio", "port_ticker": "Ticker Titolo", "port_qty": "Quantità", "port_price": "Prezzo d'Acquisto ($)", "btn_save": "SALVA IN PORTAFOGLIO",
-        "tt_ticker": "Inserisci il simbolo (es. AAPL)", "tt_qty": "Quante quote possiedi?", "tt_price": "Prezzo medio", "tt_save": "Salva i dati nel tuo cloud protetto."
+        "tt_ticker": "Inserisci il simbolo (es. AAPL)", "tt_qty": "Quante quote possiedi?", "tt_price": "Prezzo medio", "tt_save": "Salva i dati nel tuo cloud protetto.",
+        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
     },
     "EN": {
         "hero_t": "MARKET-CORE", "hero_s": "Real-time AI Quantitative Analysis.",
@@ -32,7 +33,8 @@ LANGUAGES = {
         "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER (e.g. Amazon or BTC)",
         "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
         "port_title": "📁 Portfolio Management", "port_ticker": "Asset Ticker", "port_qty": "Quantity", "port_price": "Buy Price ($)", "btn_save": "SAVE TO PORTFOLIO",
-        "tt_ticker": "Enter symbol (e.g. AAPL)", "tt_qty": "How many shares?", "tt_price": "Average buy price", "tt_save": "Save data to your secure cloud."
+        "tt_ticker": "Enter symbol (e.g. AAPL)", "tt_qty": "How many shares?", "tt_price": "Average buy price", "tt_save": "Save data to your secure cloud.",
+        "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
     },
     "ES": {
         "hero_t": "MARKET-CORE", "hero_s": "Análisis Cuantitativo IA en tiempo real.",
@@ -40,7 +42,8 @@ LANGUAGES = {
         "btn_enter": "ACCEDER AL TERMINAL", "main_search": "BUSCAR NOMBRE O TICKER (ej. Bitcoin o NVDA)",
         "chat_title": "Asesor Táctico IA", "news_title": "Noticias Data Stream",
         "port_title": "📁 Mi Portafolio", "port_ticker": "Ticker", "port_qty": "Cantidad", "port_price": "Precio de Compra ($)", "btn_save": "GUARDAR EN PORTAFOLIO",
-        "tt_ticker": "Símbolo (ej. AAPL)", "tt_qty": "¿Cuántas acciones?", "tt_price": "Precio medio", "tt_save": "Guardar en la nube."
+        "tt_ticker": "Símbolo (ej. AAPL)", "tt_qty": "¿Cuántas acciones?", "tt_price": "Precio medio", "tt_save": "Guardar en la nube.",
+        "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero."
     },
     "FR": {
         "hero_t": "MARKET-CORE", "hero_s": "Analyse Quantitative IA en temps réel.",
@@ -48,7 +51,8 @@ LANGUAGES = {
         "btn_enter": "ACCÉDER AU TERMINAL", "main_search": "RECHERCHER UN NOM OU UN TICKER",
         "chat_title": "Conseiller Tactique IA", "news_title": "Actualités Data Stream",
         "port_title": "📁 Mon Portefeuille", "port_ticker": "Ticker", "port_qty": "Quantité", "port_price": "Prix d'Achat ($)", "btn_save": "ENREGISTRER",
-        "tt_ticker": "Symbole (ex. AAPL)", "tt_qty": "Combien d'actions?", "tt_price": "Prix moyen", "tt_save": "Sauvegarder sur le cloud."
+        "tt_ticker": "Symbole (ex. AAPL)", "tt_qty": "Combien d'actions?", "tt_price": "Prix moyen", "tt_save": "Sauvegarder sur le cloud.",
+        "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier."
     }
 }
 
