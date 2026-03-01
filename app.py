@@ -20,14 +20,13 @@ st.set_page_config(
     page_title="Market-Core Terminal", 
     layout="wide", 
     page_icon="icona.png",
-    initial_sidebar_state="expanded" # Forza l'apertura della barra del portafoglio
+    initial_sidebar_state="expanded"
 )
 
-# --- FUNZIONE CRITTOGRAFIA PASSWORD ---
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# --- 2. LINGUE ESPANSE ---
+# --- 2. LINGUE ESPANSE (TRADUZIONE TOTALE) ---
 LANGUAGES = {
     "IT": {
         "hero_t": "MARKET-CORE", "hero_s": "Analisi Quantitativa IA in tempo reale.",
@@ -36,12 +35,17 @@ LANGUAGES = {
         "feat_cloud": "Portfolio Criptato", "feat_cloud_p": "Dati salvati su cloud sicuri.",
         "feat_turbo": "Dati Tempo Reale", "feat_turbo_p": "Connessione diretta ai mercati mondiali.",
         "btn_enter": "ACCEDI AL TERMINALE", "main_search": "CERCA NOME O TICKER (es. Bitcoin o NVDA)",
-        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
+        "chat_title": "AI Tactical Support", "news_title": "Data Stream News",
         "port_title": "📁 PORTAFOGLIO CLOUD", 
         "port_subtitle": "I tuoi Asset",
         "port_add": "AGGIUNGI TITOLO",
         "port_ticker": "Ticker (es. NVDA)", "port_qty": "Quantità", "port_price": "Prezzo ($)", "btn_save": "SALVA",
-        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria."
+        "disclaimer": "⚠️ Market-Core è uno strumento IA. Non costituisce consulenza finanziaria.",
+        "chart_settings": "📊 Impostazioni Grafico", "period": "📅 Periodo", "style": "📈 Stile", "indicators": "⚙️ Indicatori",
+        "candles": "Candele", "line": "Linea", "price": "Prezzo",
+        "no_news": "Nessuna notizia trovata.", "ask_ai": "Chiedimi un'analisi sul titolo...",
+        "no_asset": "Nessun asset salvato.", "logout": "LOGOUT SICURO", "error_ai": "L'IA non è al momento disponibile.",
+        "loading_chart": "Compilazione dati grafici in corso..."
     },
     "EN": {
         "hero_t": "MARKET-CORE", "hero_s": "Real-time AI Quantitative Analysis.",
@@ -49,13 +53,18 @@ LANGUAGES = {
         "feat_ia": "AI Tactical Analysis", "feat_ia_p": "Signals based on RSI and SMA.",
         "feat_cloud": "Encrypted Portfolio", "feat_cloud_p": "Data saved on secure clouds.",
         "feat_turbo": "Real-Time Data", "feat_turbo_p": "Direct connection to global markets.",
-        "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER",
-        "chat_title": "AI Tactical Advisor", "news_title": "Data Stream News",
+        "btn_enter": "ACCESS TERMINAL", "main_search": "SEARCH NAME OR TICKER (e.g. Bitcoin or NVDA)",
+        "chat_title": "AI Tactical Support", "news_title": "Data Stream News",
         "port_title": "📁 CLOUD PORTFOLIO", 
         "port_subtitle": "Your Assets",
         "port_add": "ADD ASSET",
         "port_ticker": "Ticker (e.g. NVDA)", "port_qty": "Quantity", "port_price": "Price ($)", "btn_save": "SAVE",
-        "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice."
+        "disclaimer": "⚠️ Market-Core is an AI tool. Not financial advice.",
+        "chart_settings": "📊 Chart Settings", "period": "📅 Period", "style": "📈 Style", "indicators": "⚙️ Indicators",
+        "candles": "Candles", "line": "Line", "price": "Price",
+        "no_news": "No news found.", "ask_ai": "Ask for an analysis...",
+        "no_asset": "No assets saved.", "logout": "SECURE LOGOUT", "error_ai": "AI is currently unavailable.",
+        "loading_chart": "Compiling chart data..."
     },
     "ES": {
         "hero_t": "MARKET-CORE", "hero_s": "Análisis Cuantitativo IA en tiempo real.",
@@ -64,12 +73,17 @@ LANGUAGES = {
         "feat_cloud": "Portafolio Cifrado", "feat_cloud_p": "Datos en la nube segura.",
         "feat_turbo": "Datos en Tiempo Real", "feat_turbo_p": "Conexión directa a los mercados.",
         "btn_enter": "ACCEDER AL TERMINAL", "main_search": "BUSCAR NOMBRE O TICKER",
-        "chat_title": "Asesor Táctico IA", "news_title": "Noticias Data Stream",
+        "chat_title": "Soporte Táctico IA", "news_title": "Noticias Data Stream",
         "port_title": "📁 PORTAFOLIO CLOUD", 
         "port_subtitle": "Tus Activos",
         "port_add": "AÑADIR ACTIVO",
         "port_ticker": "Ticker (ej. NVDA)", "port_qty": "Cantidad", "port_price": "Precio ($)", "btn_save": "GUARDAR",
-        "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero."
+        "disclaimer": "⚠️ Market-Core es una herramienta de IA. No es asesoramiento financiero.",
+        "chart_settings": "📊 Ajustes del Gráfico", "period": "📅 Período", "style": "📈 Estilo", "indicators": "⚙️ Indicadores",
+        "candles": "Velas", "line": "Línea", "price": "Precio",
+        "no_news": "No se encontraron noticias.", "ask_ai": "Pide un análisis...",
+        "no_asset": "Ningún activo guardado.", "logout": "CERRAR SESIÓN", "error_ai": "La IA no está disponible.",
+        "loading_chart": "Recopilando datos del gráfico..."
     },
     "FR": {
         "hero_t": "MARKET-CORE", "hero_s": "Analyse Quantitative IA en temps réel.",
@@ -78,12 +92,17 @@ LANGUAGES = {
         "feat_cloud": "Portefeuille Crypté", "feat_cloud_p": "Données sur le cloud sécurisé.",
         "feat_turbo": "Données en Temps Réel", "feat_turbo_p": "Connexion directe aux marchés.",
         "btn_enter": "ACCÉDER AU TERMINAL", "main_search": "RECHERCHER UN NOM OU UN TICKER",
-        "chat_title": "Conseiller Tactique IA", "news_title": "Actualités Data Stream",
+        "chat_title": "Support Tactique IA", "news_title": "Actualités Data Stream",
         "port_title": "📁 PORTEFEUILLE CLOUD", 
         "port_subtitle": "Vos Actifs",
         "port_add": "AJOUTER ACTIF",
         "port_ticker": "Ticker (ex. NVDA)", "port_qty": "Quantité", "port_price": "Prix ($)", "btn_save": "ENREGISTRER",
-        "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier."
+        "disclaimer": "⚠️ Market-Core est un outil d'IA. Ce n'est pas un conseil financier.",
+        "chart_settings": "📊 Paramètres du Graphique", "period": "📅 Période", "style": "📈 Style", "indicators": "⚙️ Indicateurs",
+        "candles": "Bougies", "line": "Ligne", "price": "Prix",
+        "no_news": "Aucune actualité trouvée.", "ask_ai": "Demander une analyse...",
+        "no_asset": "Aucun actif enregistré.", "logout": "DÉCONNEXION", "error_ai": "L'IA est indisponible.",
+        "loading_chart": "Compilation des données..."
     }
 }
 
@@ -94,9 +113,10 @@ st.markdown("""
     .hero-title { font-size: clamp(50px, 8vw, 80px); font-weight: 900; text-align: center; background: linear-gradient(90deg, #00ff41, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom:0; }
     .about-section { background: rgba(10, 10, 10, 0.9); border-left: 5px solid #ff00ff; padding: 25px; margin: 20px auto; max-width: 900px; border-radius: 0 15px 15px 0; }
     .feat-card { border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; background: rgba(20,20,20,0.5); min-height: 160px; }
-    .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; }
+    .stButton>button { background: transparent !important; color: #00ff41 !important; border: 2px solid #00ff41 !important; width: 100%; font-weight: bold; transition: all 0.3s ease; }
     .stButton>button:hover { background: #00ff41 !important; color: black !important; box-shadow: 0 0 15px #00ff41; }
     .asset-box { border: 1px solid #333; padding: 10px; margin-bottom: 5px; border-radius: 5px; background: #111; border-left: 3px solid #ff00ff;}
+    div[data-testid="stExpander"] { background-color: #111; border: 1px solid #00ff41; border-radius: 10px; }
     #MainMenu, footer {visibility: hidden;} 
     </style>
     """, unsafe_allow_html=True)
@@ -130,7 +150,7 @@ def fetch_news_rss(q):
     except: pass
     return news
 
-# --- 5. DATABASE (SAFE CONNECT V2) ---
+# --- 5. DATABASE ---
 @st.cache_resource
 def init_db():
     try:
@@ -161,7 +181,7 @@ def delete_portfolio_item(email, ticker):
                 return True
     return False
 
-# --- 6. IA SINC - MOTORE AUTO-RICERCA FIX ---
+# --- 6. IA SINC ---
 API_KEY = os.environ.get("GEMINI_API_KEY")
 model = None
 if API_KEY:
@@ -169,19 +189,15 @@ if API_KEY:
     try:
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         target_model = None
-        for m_name in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-1.0-pro', 'models/gemini-pro']:
+        for m_name in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-1.0-pro']:
             if m_name in available_models:
                 target_model = m_name
                 break
-        if not target_model and available_models:
-            target_model = available_models[0]
-        if target_model:
-            model = genai.GenerativeModel(target_model)
-    except Exception as e:
-        pass
+        if not target_model and available_models: target_model = available_models[0]
+        if target_model: model = genai.GenerativeModel(target_model)
+    except: pass
 
 # --- 7. APPLICAZIONE ---
-
 if st.session_state.page == "landing":
     c1, c2, c3 = st.columns([4, 1, 4])
     with c2: st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
@@ -217,12 +233,11 @@ elif st.session_state.page == "auth":
                         if len(row) >= 2 and row[0] == email_in and row[1] == hashed_input:
                             user_found = True
                             break
-                    
                     if user_found:
                         st.session_state.logged_in = True
                         st.session_state.user_email = email_in
                         st.session_state.portfolio = load_portfolio(email_in)
-                        st.session_state.terminal_booted = False # Reset boot sequence
+                        st.session_state.terminal_booted = False
                         st.session_state.page = "terminal"
                         st.rerun()
                     else: st.error("Email o password errati.")
@@ -248,61 +263,43 @@ elif st.session_state.page == "auth":
 
 elif st.session_state.page == "terminal" and st.session_state.logged_in:
     
-    # --- SEQUENZA DI AVVIO TERMINALE (BOOT HACKER) ---
     if not st.session_state.terminal_booted:
         boot_placeholder = st.empty()
-        boot_phrases = [
-            "> Inizializzazione Trading Hub Pro v9.9.3...",
-            "> Protocollo Safe Connect v2 in aggancio...",
-            "> Sincronizzazione API globali in corso...",
-            "> Caricamento moduli di Intelligenza Artificiale...",
-            "> Decrittazione portafoglio cloud...",
-            "> Accesso garantito. Avvio interfaccia..."
-        ]
-        
+        boot_phrases = ["> Inizializzazione Hub v9...", "> Aggancio API globali...", "> Accesso garantito."]
         with boot_placeholder.container():
             st.markdown("<div style='margin-top:20vh; font-family: Courier New;'>", unsafe_allow_html=True)
             for phrase in boot_phrases:
                 st.markdown(f"<h4 style='color:#00ff41;'>{phrase}</h4>", unsafe_allow_html=True)
-                time.sleep(0.5) # Pausa drammatica
+                time.sleep(0.5)
             st.markdown("</div>", unsafe_allow_html=True)
             time.sleep(0.5)
-            
-        boot_placeholder.empty() # Pulisce lo schermo
+        boot_placeholder.empty()
         st.session_state.terminal_booted = True
-        st.rerun() # Riavvia la pagina per mostrare la dashboard vera
+        st.rerun()
 
-    # --- LA SIDEBAR (IL CUORE DEL PORTAFOGLIO) ---
     with st.sidebar:
         st.markdown(f"<h2 style='color:#ff00ff;'>{L['hero_t']}</h2>", unsafe_allow_html=True)
         st.session_state.lang = st.selectbox("🌐 ", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
         
         st.divider()
         st.markdown(f"### {L['port_title']}")
-        
-        # 1. VISUALIZZAZIONE ed ELIMINAZIONE
         if st.session_state.portfolio:
             st.markdown(f"<span style='color:#888;'>{L['port_subtitle']}</span>", unsafe_allow_html=True)
             for item in st.session_state.portfolio:
                 ticker, price, qty = item[1], float(item[2]), float(item[3])
-                
                 col_txt, col_btn = st.columns([4, 1])
-                with col_txt:
-                    st.markdown(f"<div class='asset-box'><b>{ticker}</b><br>{qty} qt | ${price:.2f}</div>", unsafe_allow_html=True)
+                with col_txt: st.markdown(f"<div class='asset-box'><b>{ticker}</b><br>{qty} qt | ${price:.2f}</div>", unsafe_allow_html=True)
                 with col_btn:
                     if st.button("🗑️", key=f"del_{ticker}"):
                         if delete_portfolio_item(st.session_state.user_email, ticker):
                             st.session_state.portfolio = load_portfolio(st.session_state.user_email)
                             st.rerun()
         else:
-            st.info("Nessun asset salvato.")
+            st.info(L['no_asset'])
         
         st.write("##")
-        
-        # 2. INSERIMENTO
         st.markdown(f"**{L['port_add']}**")
         p_ticker = st.text_input(L['port_ticker'], key="tck_in").upper()
-        
         c_qty, c_prc = st.columns(2)
         with c_qty: p_qty = st.number_input(L['port_qty'], min_value=0.01, step=0.01)
         with c_prc: p_price = st.number_input(L['port_price'], min_value=0.01, step=0.01)
@@ -320,7 +317,7 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                 st.warning("Inserisci Ticker.")
 
         st.divider()
-        if st.button("LOGOUT"):
+        if st.button(L['logout']):
             st.session_state.logged_in = False
             st.session_state.user_email = ""
             st.session_state.portfolio = []
@@ -328,7 +325,6 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
             st.session_state.page = "landing"
             st.rerun()
 
-    # --- DASHBOARD PRINCIPALE ---
     st.markdown(f"<h3 style='text-align:center;'>🔍 {L['main_search']}</h3>", unsafe_allow_html=True)
     u_in = st.text_input("", "Bitcoin", label_visibility="collapsed")
     t_sym = resolve_ticker(u_in)
@@ -344,19 +340,15 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
 
     st.divider()
 
-    st.markdown("### 📊 Impostazioni Grafico")
+    st.markdown(f"### {L['chart_settings']}")
     g_col1, g_col2, g_col3 = st.columns(3)
-    
-    with g_col1:
-        periodo = st.selectbox("📅 Periodo", ["3mo", "6mo", "1y", "2y", "5y"], index=1)
-    with g_col2:
-        stile_grafico = st.selectbox("📈 Stile", ["Candele", "Linea"])
-    with g_col3:
-        indicatori = st.multiselect("⚙️ Indicatori", ["SMA 20", "SMA 50", "Bande di Bollinger", "MACD"], default=["SMA 20"])
+    with g_col1: periodo = st.selectbox(L['period'], ["3mo", "6mo", "1y", "2y", "5y"], index=1)
+    with g_col2: stile_grafico = st.selectbox(L['style'], [L['candles'], L['line']])
+    with g_col3: indicatori = st.multiselect(L['indicators'], ["SMA 20", "SMA 50", "Bande di Bollinger", "MACD"], default=["SMA 20"])
 
     st.write("---")
 
-    with st.spinner("Compilazione dati grafici in corso..."):
+    with st.spinner(L['loading_chart']):
         data = yf.download(t_sym, period=periodo, interval="1d", auto_adjust=True, progress=False)
         
         if not data.empty:
@@ -379,10 +371,10 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
 
             fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
             
-            if stile_grafico == "Candele":
-                fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name="Prezzo"), row=1, col=1)
+            if stile_grafico == L['candles']:
+                fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name=L['price']), row=1, col=1)
             else:
-                fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name="Prezzo", line=dict(color='#00ff41', width=2)), row=1, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name=L['price'], line=dict(color='#00ff41', width=2)), row=1, col=1)
             
             if "SMA 20" in indicatori: fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name="SMA 20", line=dict(color='orange', width=1.5)), row=1, col=1)
             if "SMA 50" in indicatori: fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name="SMA 50", line=dict(color='yellow', width=1.5)), row=1, col=1)
@@ -407,61 +399,56 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                 news_feed = fetch_news_rss(u_in)
                 if news_feed:
                     for n in news_feed: st.markdown(f"• [{n['t']}]({n['l']})")
-                else: st.write("Nessuna notizia trovata.")
+                else: st.write(L['no_news'])
 
             with c2:
-                st.subheader(f"💬 {L['chat_title']}")
-                if 'msgs' not in st.session_state: st.session_state.msgs = []
-                
-                for m in st.session_state.msgs:
-                    with st.chat_message(m["role"]): st.markdown(m["content"])
-                
-                if inp := st.chat_input("Chiedimi un'analisi..."):
-                    st.session_state.msgs.append({"role": "user", "content": inp})
-                    with st.chat_message("user"): st.markdown(inp)
+                # MENU A TENDINA PER LA CHAT (STILE WIDGET PROFESSIONALE)
+                with st.expander(f"💬 {L['chat_title']} - Online", expanded=True):
+                    if 'msgs' not in st.session_state: st.session_state.msgs = []
                     
-                    with st.chat_message("assistant"):
-                        if model:
-                            # EFFETTO CARICAMENTO CHAT
-                            terminal_placeholder = st.empty()
-                            fake_logs = [
-                                "⏳ Inizializzazione protocollo neurale...",
-                                "📡 Scansione matrici di mercato in tempo reale...",
-                                "⚡ Sincronizzazione indicatori tattici..."
-                            ]
-                            for log in fake_logs:
-                                terminal_placeholder.markdown(log)
-                                time.sleep(0.4)
-                                
-                            try:
-                                port_context = "L'utente non ha asset in portafoglio."
-                                if st.session_state.portfolio:
-                                    asset_list = ", ".join([f"{item[3]} quote di {item[1]} a {item[2]}$" for item in st.session_state.portfolio])
-                                    port_context = f"Portafoglio attuale dell'utente: {asset_list}."
+                    # ICONE PERSONALIZZATE: 🧑‍💻 (User) e ⚡ (AI)
+                    for m in st.session_state.msgs:
+                        icona = "🧑‍💻" if m["role"] == "user" else "⚡"
+                        with st.chat_message(m["role"], avatar=icona): st.markdown(m["content"])
+                    
+                    if inp := st.chat_input(L['ask_ai']):
+                        st.session_state.msgs.append({"role": "user", "content": inp})
+                        with st.chat_message("user", avatar="🧑‍💻"): st.markdown(inp)
+                        
+                        with st.chat_message("assistant", avatar="⚡"):
+                            if model:
+                                terminal_placeholder = st.empty()
+                                fake_logs = ["⏳...", "📡...", "⚡..."]
+                                for log in fake_logs:
+                                    terminal_placeholder.markdown(log)
+                                    time.sleep(0.3)
+                                    
+                                try:
+                                    port_context = ""
+                                    if st.session_state.portfolio:
+                                        asset_list = ", ".join([f"{item[3]} quote di {item[1]} a {item[2]}$" for item in st.session_state.portfolio])
+                                        port_context = f"Portafoglio attuale dell'utente: {asset_list}."
 
-                                ctx = f"Dati attuali - Asset: {t_sym}, Prezzo: {df['Close'].iloc[-1]:.2f}, RSI: {df['RSI'].iloc[-1]:.1f}. {port_context}"
-                                
-                                # GESTIONE MEMORIA CONTESTO (Ultimi 4 scambi per non sovraccaricare le API)
-                                history = ""
-                                if len(st.session_state.msgs) > 1:
-                                    history = "Contesto della conversazione precedente:\n" + "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.msgs[-5:-1]])
-                                
-                                prompt = f"Sei un analista finanziario IA del Market-Core.\n{ctx}\n{history}\nL'utente chiede: {inp}\nRispondi in modo professionale e schematico in lingua {st.session_state.lang}."
-                                
-                                # STREAMING DELLA RISPOSTA IA
-                                res_stream = model.generate_content(prompt, stream=True)
-                                full_response = ""
-                                
-                                for chunk in res_stream:
-                                    full_response += chunk.text
-                                    terminal_placeholder.markdown(full_response + " █")
-                                    time.sleep(0.01)
-                                
-                                terminal_placeholder.markdown(full_response)
-                                st.session_state.msgs.append({"role": "assistant", "content": full_response})
-                                
-                            except Exception as e:
-                                terminal_placeholder.error(f"Errore tecnico IA: {e}")
-                        else: st.error("L'IA non è al momento disponibile.")
+                                    ctx = f"Dati attuali - Asset: {t_sym}, Prezzo: {df['Close'].iloc[-1]:.2f}, RSI: {df['RSI'].iloc[-1]:.1f}. {port_context}"
+                                    history = ""
+                                    if len(st.session_state.msgs) > 1:
+                                        history = "Contesto:\n" + "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.msgs[-5:-1]])
+                                    
+                                    prompt = f"Sei un analista finanziario IA. {ctx}\n{history}\nL'utente chiede: {inp}\nRispondi in modo schematico in lingua {st.session_state.lang}."
+                                    
+                                    res_stream = model.generate_content(prompt, stream=True)
+                                    full_response = ""
+                                    
+                                    for chunk in res_stream:
+                                        full_response += chunk.text
+                                        terminal_placeholder.markdown(full_response + " █")
+                                        time.sleep(0.01)
+                                    
+                                    terminal_placeholder.markdown(full_response)
+                                    st.session_state.msgs.append({"role": "assistant", "content": full_response})
+                                    
+                                except Exception as e:
+                                    terminal_placeholder.error(f"Errore: {e}")
+                            else: st.error(L['error_ai'])
 
 st.markdown(f"<div style='text-align:center; color:#444; font-size:10px; margin-top:50px;'>{L['disclaimer']}</div>", unsafe_allow_html=True)
