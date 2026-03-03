@@ -14,6 +14,7 @@ import json
 from datetime import datetime
 import hashlib
 import time
+import re
 
 # --- 1. CONFIGURAZIONE E FORZATURA BARRA LATERALE ---
 st.set_page_config(
@@ -106,7 +107,7 @@ LANGUAGES = {
     }
 }
 
-# --- 3. CSS CUSTOM ---
+# --- 3. CSS CUSTOM E FUNZIONE COLORI NEURO-MARKETING ---
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
@@ -120,6 +121,15 @@ st.markdown("""
     #MainMenu, footer {visibility: hidden;} 
     </style>
     """, unsafe_allow_html=True)
+
+def colora_segnali(testo):
+    # Colora di VERDE NEON le parole positive
+    testo = re.sub(r'(?i)\b(bullish|rialzista|buy|comprare|long|ipervenduto)\b', 
+                   r'<span style="color:#00ff41; font-weight:900; text-shadow: 0 0 5px #00ff41;">\1</span>', testo)
+    # Colora di ROSSO SANGUE le parole negative
+    testo = re.sub(r'(?i)\b(bearish|ribassista|sell|vendere|short|ipercomprato|crollo)\b', 
+                   r'<span style="color:#ff0033; font-weight:900; text-shadow: 0 0 5px #ff0033;">\1</span>', testo)
+    return testo
 
 # --- 4. GESTIONE STATO ---
 if 'lang' not in st.session_state: st.session_state.lang = "IT"
@@ -155,16 +165,16 @@ def fetch_news_rss(q):
 def init_db():
     try:
         creds_json = os.environ.get("GOOGLE_CREDENTIALS")
-        if not creds_json: return None, None
+        if not creds_json: return None, None, None
         creds_dict = json.loads(creds_json)
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
         sheet = client.open_by_key("1DJesdyf6AeyotOzBqzq-SJGKGe93v_kK6RXNB0LC_ck")
-        return sheet.worksheet("Utenti"), sheet.worksheet("Portafoglio")
-    except: return None, None
+        return sheet.worksheet("Utenti"), sheet.worksheet("Portafoglio"), sheet.worksheet("Visite")
+    except: return None, None, None
 
-ws_utenti, ws_portafoglio = init_db()
+ws_utenti, ws_portafoglio, ws_visite = init_db()
 
 def load_portfolio(email):
     if ws_portafoglio:
@@ -199,6 +209,15 @@ if API_KEY:
 
 # --- 7. APPLICAZIONE ---
 if st.session_state.page == "landing":
+    
+    # TRACCIAMENTO INVISIBILE
+    if 'tracked' not in st.session_state:
+        st.session_state.tracked = True
+        if ws_visite:
+            try:
+                ws_visite.append_row([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Visita Landing Page"])
+            except: pass
+
     c1, c2, c3 = st.columns([4, 1, 4])
     with c2: st.session_state.lang = st.selectbox("🌐", ["IT", "EN", "ES", "FR"], index=["IT", "EN", "ES", "FR"].index(st.session_state.lang))
     
@@ -402,14 +421,13 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                 else: st.write(L['no_news'])
 
             with c2:
-                # MENU A TENDINA PER LA CHAT (STILE WIDGET PROFESSIONALE)
                 with st.expander(f"💬 {L['chat_title']} - Online", expanded=True):
                     if 'msgs' not in st.session_state: st.session_state.msgs = []
                     
-                    # ICONE PERSONALIZZATE: 🧑‍💻 (User) e ⚡ (AI)
                     for m in st.session_state.msgs:
                         icona = "🧑‍💻" if m["role"] == "user" else "⚡"
-                        with st.chat_message(m["role"], avatar=icona): st.markdown(m["content"])
+                        with st.chat_message(m["role"], avatar=icona): 
+                            st.markdown(m["content"], unsafe_allow_html=True)
                     
                     if inp := st.chat_input(L['ask_ai']):
                         st.session_state.msgs.append({"role": "user", "content": inp})
@@ -434,7 +452,7 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                                     if len(st.session_state.msgs) > 1:
                                         history = "Contesto:\n" + "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.msgs[-5:-1]])
                                     
-                                    prompt = f"Sei un analista finanziario IA. {ctx}\n{history}\nL'utente chiede: {inp}\nRispondi in modo schematico in lingua {st.session_state.lang}."
+                                    prompt = f"Sei un analista finanziario IA. {ctx}\n{history}\nL'utente chiede: {inp}\nRispondi in modo schematico in lingua {st.session_state.lang}. Se l'outlook è positivo usa le parole 'BULLISH' o 'BUY'. Se è negativo usa 'BEARISH' o 'CROLLO'."
                                     
                                     res_stream = model.generate_content(prompt, stream=True)
                                     full_response = ""
@@ -444,8 +462,9 @@ elif st.session_state.page == "terminal" and st.session_state.logged_in:
                                         terminal_placeholder.markdown(full_response + " █")
                                         time.sleep(0.01)
                                     
-                                    terminal_placeholder.markdown(full_response)
-                                    st.session_state.msgs.append({"role": "assistant", "content": full_response})
+                                    testo_colorato = colora_segnali(full_response)
+                                    terminal_placeholder.markdown(testo_colorato, unsafe_allow_html=True)
+                                    st.session_state.msgs.append({"role": "assistant", "content": testo_colorato})
                                     
                                 except Exception as e:
                                     terminal_placeholder.error(f"Errore: {e}")
